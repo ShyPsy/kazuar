@@ -2,12 +2,15 @@
 
 > [!TIP]
 > The source XML definitions for all default layouts are located in the repository under [`app/src/main/res/xml/`](../app/src/main/res/xml/). You can use these XML files directly as templates for creating custom layouts:
+> - **Russian V4**: [`rows_east_slavic_v4.xml`](../app/src/main/res/xml/rows_east_slavic_v4.xml)
 > - **Russian V3**: [`rows_east_slavic_v3.xml`](../app/src/main/res/xml/rows_east_slavic_v3.xml)
 > - **Russian V2**: [`rows_east_slavic_v2.xml`](../app/src/main/res/xml/rows_east_slavic_v2.xml)
 > - **Russian V1**: [`rows_east_slavic.xml`](../app/src/main/res/xml/rows_east_slavic.xml)
+> - **English V4**: [`rows_qwerty_v4.xml`](../app/src/main/res/xml/rows_qwerty_v4.xml)
 > - **English V3**: [`rows_qwerty_v3.xml`](../app/src/main/res/xml/rows_qwerty_v3.xml)
 > - **English V2**: [`rows_qwerty_v2.xml`](../app/src/main/res/xml/rows_qwerty_v2.xml)
 > - **English V1**: [`rows_qwerty.xml`](../app/src/main/res/xml/rows_qwerty.xml)
+> - **Symbols V4**: [`rows_symbols_v4.xml`](../app/src/main/res/xml/rows_symbols_v4.xml)
 > - **Symbols V3**: [`rows_symbols_v3.xml`](../app/src/main/res/xml/rows_symbols_v3.xml)
 > - **Edit Mode**: [`rows_editing.xml`](../app/src/main/res/xml/rows_editing.xml)
 
@@ -163,6 +166,38 @@ Double Tap:
 | ШШ            | Щ            |
 | ЙЙ            | Э            |
 | ЧЧ            | Ф            |
+| ⎵⎵            | .⎵           |
+| --            | —            |
+
+# V4
+
+Languages:
+Russian layout:
+
+| 1   | 2   | 3   | 4   | 5   | 6   | 7   | 8   | 9   | 0     |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | ----- |
+| й   | б   | у   | к   | е   | н   | г   | ш   | з   | х     |
+| ж   | ы   | в   | а   | п   | р   | о   | л   | д   | bcspc |
+| я   | ч   | с   | м   | spc | spc | spc | и   | т   | ь     |
+
+English layout:
+
+| 1   | 2   | 3   | 4   | 5   | 6   | 7   | 8   | 9   | 0     |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | ----- |
+| q   | w   | e   | r   | t   | y   | u   | i   | o   | p     |
+| a   | s   | d   | f   | g   | h   | j   | k   | l   | bcspc |
+| z   | x   | c   | v   | spc | spc | spc | b   | n   | m     |
+
+Double Tap:
+
+| Original text | Auto-replace |
+| ------------- | ------------ |
+| ЫЫ            | Ю            |
+| ЬЬ            | Ъ            |
+| ШШ            | Щ            |
+| ЙЙ            | Э            |
+| ЧЧ            | Ф            |
+| ХХ            | Ц            |
 | ⎵⎵            | .⎵           |
 | --            | —            |
 

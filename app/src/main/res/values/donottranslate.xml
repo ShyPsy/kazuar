@@ -145,12 +145,14 @@
         <item>v1</item>
         <item>v2</item>
         <item>v3</item>
+        <item>v4</item>
     </string-array>
 
     <string-array name="layout_choices_values">
         <item>v1</item>
         <item>v2</item>
         <item>v3</item>
+        <item>v4</item>
         <item>custom</item>
     </string-array>
 

@@ -5,12 +5,15 @@ Custom keyboard layouts use the XML format parsed by [CustomLayoutLoader.java](.
 > [!TIP]
 > **Using Built-in Layouts as Templates**:
 > You can take any default layout directly from the sources in [`app/src/main/res/xml/`](../app/src/main/res/xml/), modify its keys, widths, or shortcuts, and load it as a custom layout:
+> - **Russian V4**: [`rows_east_slavic_v4.xml`](../app/src/main/res/xml/rows_east_slavic_v4.xml)
 > - **Russian V3**: [`rows_east_slavic_v3.xml`](../app/src/main/res/xml/rows_east_slavic_v3.xml)
 > - **Russian V2**: [`rows_east_slavic_v2.xml`](../app/src/main/res/xml/rows_east_slavic_v2.xml)
 > - **Russian V1**: [`rows_east_slavic.xml`](../app/src/main/res/xml/rows_east_slavic.xml)
+> - **English V4**: [`rows_qwerty_v4.xml`](../app/src/main/res/xml/rows_qwerty_v4.xml)
 > - **English V3**: [`rows_qwerty_v3.xml`](../app/src/main/res/xml/rows_qwerty_v3.xml)
 > - **English V2**: [`rows_qwerty_v2.xml`](../app/src/main/res/xml/rows_qwerty_v2.xml)
 > - **English V1**: [`rows_qwerty.xml`](../app/src/main/res/xml/rows_qwerty.xml)
+> - **Symbols V4**: [`rows_symbols_v4.xml`](../app/src/main/res/xml/rows_symbols_v4.xml)
 > - **Symbols V3**: [`rows_symbols_v3.xml`](../app/src/main/res/xml/rows_symbols_v3.xml)
 
 ## Root Attributes

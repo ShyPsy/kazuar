@@ -586,6 +586,14 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
                         } else if ("rows_symbols".equals(entryName) || "rows_symbols_shift".equals(entryName)) {
                             keyboardLayout = R.xml.rows_symbols_v3;
                         }
+                    } else if ("v4".equals(layoutVersion)) {
+                        if ("rows_qwerty".equals(entryName)) {
+                            keyboardLayout = R.xml.rows_qwerty_v4;
+                        } else if ("rows_east_slavic".equals(entryName)) {
+                            keyboardLayout = R.xml.rows_east_slavic_v4;
+                        } else if ("rows_symbols".equals(entryName) || "rows_symbols_shift".equals(entryName)) {
+                            keyboardLayout = R.xml.rows_symbols_v4;
+                        }
                     }
                 } catch (Exception e) {
                     Log.w(BUILDER_TAG, "Failed to resolve layout version for keyboardLayout=" + keyboardLayout, e);
