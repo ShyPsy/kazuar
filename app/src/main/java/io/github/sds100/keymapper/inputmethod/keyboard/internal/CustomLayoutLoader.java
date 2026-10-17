@@ -1,15 +1,19 @@
 package io.github.sds100.keymapper.inputmethod.keyboard.internal;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.util.Log;
 import android.util.Xml;
+import android.view.inputmethod.EditorInfo;
 import io.github.sds100.keymapper.inputmethod.keyboard.Key;
 import io.github.sds100.keymapper.inputmethod.keyboard.KeyboardId;
 import io.github.sds100.keymapper.inputmethod.latin.common.Constants;
 import org.xmlpull.v1.XmlPullParser;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class CustomLayoutLoader {
     private static final String TAG = "CustomLayoutLoader";
@@ -73,51 +77,101 @@ public class CustomLayoutLoader {
             ArrayList<ArrayList<CustomKeySpec>> rows = new ArrayList<>();
             ArrayList<Float> rowDefaultWidths = new ArrayList<>();
             ArrayList<CustomReplaceRule> replaceRules = new ArrayList<>();
+            ArrayDeque<SwitchState> switchStack = new ArrayDeque<>();
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG) {
                     String tagName = parser.getName();
-                    if ("Keyboard".equalsIgnoreCase(tagName)) {
-                        String keyWidthAttr = getAttributeValue(parser, "keyWidth");
-                        if (keyWidthAttr != null) {
-                            defaultKeyWidthPercent = parsePercent(keyWidthAttr, 0.10f);
+                    if ("switch".equalsIgnoreCase(tagName)) {
+                        SwitchState newState = new SwitchState();
+                        newState.isBranchActive = false;
+                        switchStack.push(newState);
+                    } else if ("case".equalsIgnoreCase(tagName)) {
+                        SwitchState state = switchStack.peek();
+                        if (state != null) {
+                            boolean parentActive = isParentActive(switchStack);
+                            if (parentActive && !state.conditionMatched && matchesCaseCondition(parser, params, context)) {
+                                state.conditionMatched = true;
+                                state.isBranchActive = true;
+                            } else {
+                                state.isBranchActive = false;
+                            }
                         }
-                    } else if ("Row".equalsIgnoreCase(tagName)) {
-                        currentRow++;
-                        rows.add(new ArrayList<CustomKeySpec>());
-                        float rowWidth = defaultKeyWidthPercent;
-                        String rowKeyWidthAttr = getAttributeValue(parser, "keyWidth");
-                        if (rowKeyWidthAttr != null) {
-                            rowWidth = parsePercent(rowKeyWidthAttr, defaultKeyWidthPercent);
+                    } else if ("default".equalsIgnoreCase(tagName)) {
+                        SwitchState state = switchStack.peek();
+                        if (state != null) {
+                            boolean parentActive = isParentActive(switchStack);
+                            if (parentActive && !state.conditionMatched) {
+                                state.conditionMatched = true;
+                                state.isBranchActive = true;
+                            } else {
+                                state.isBranchActive = false;
+                            }
                         }
-                        rowDefaultWidths.add(rowWidth);
-                    } else if ("Key".equalsIgnoreCase(tagName)) {
-                        if (currentRow >= 0 && currentRow < rows.size()) {
-                            CustomKeySpec spec = new CustomKeySpec();
-                            spec.label = getAttributeValue(parser, "keyLabel", "label", "keySpec");
-                            spec.codes = getAttributeValue(parser, "codes", "code");
-                            spec.keyWidth = getAttributeValue(parser, "keyWidth", "width");
-                            spec.keyIcon = getAttributeValue(parser, "keyIcon", "icon");
-                            spec.longCode = getAttributeValue(parser, "longCode");
-                            spec.moreKeys = getAttributeValue(parser, "moreKeys");
-                            spec.backgroundType = getAttributeValue(parser, "backgroundType");
-                            spec.hint = getAttributeValue(parser, "keyHintLabel", "hintLabel", "hint");
-                            spec.keyStyle = getAttributeValue(parser, "keyStyle", "style");
-                            spec.keyLabelFlags = getAttributeValue(parser, "keyLabelFlags", "labelFlags");
-                            rows.get(currentRow).add(spec);
+                    } else if (isCurrentActive(switchStack)) {
+                        if ("Keyboard".equalsIgnoreCase(tagName) || "merge".equalsIgnoreCase(tagName)) {
+                            String keyWidthAttr = getAttributeValue(parser, "keyWidth");
+                            if (keyWidthAttr != null) {
+                                defaultKeyWidthPercent = parsePercent(keyWidthAttr, 0.10f);
+                            }
+                        } else if ("Row".equalsIgnoreCase(tagName)) {
+                            currentRow++;
+                            rows.add(new ArrayList<CustomKeySpec>());
+                            float rowWidth = defaultKeyWidthPercent;
+                            String rowKeyWidthAttr = getAttributeValue(parser, "keyWidth");
+                            if (rowKeyWidthAttr != null) {
+                                rowWidth = parsePercent(rowKeyWidthAttr, defaultKeyWidthPercent);
+                            }
+                            rowDefaultWidths.add(rowWidth);
+                        } else if ("Key".equalsIgnoreCase(tagName)) {
+                            if (currentRow >= 0 && currentRow < rows.size()) {
+                                CustomKeySpec spec = new CustomKeySpec();
+                                spec.label = getAttributeValue(parser, "keyLabel", "label", "keySpec");
+                                spec.codes = getAttributeValue(parser, "codes", "code");
+                                spec.keyWidth = getAttributeValue(parser, "keyWidth", "width");
+                                spec.keyIcon = getAttributeValue(parser, "keyIcon", "icon");
+                                spec.longCode = getAttributeValue(parser, "longCode");
+                                spec.moreKeys = getAttributeValue(parser, "moreKeys");
+                                spec.backgroundType = getAttributeValue(parser, "backgroundType");
+                                spec.hint = getAttributeValue(parser, "keyHintLabel", "hintLabel", "hint");
+                                spec.keyStyle = getAttributeValue(parser, "keyStyle", "style");
+                                spec.keyLabelFlags = getAttributeValue(parser, "keyLabelFlags", "labelFlags");
+                                spec.mode = getAttributeValue(parser, "mode");
+                                spec.imeAction = getAttributeValue(parser, "imeAction");
+                                spec.actionKey = getAttributeValue(parser, "actionKey", "dynamicAction");
+                                if (matchesKeyConditions(spec, params, context)) {
+                                    rows.get(currentRow).add(spec);
+                                }
+                            }
+                        } else if ("Spacer".equalsIgnoreCase(tagName)) {
+                            if (currentRow >= 0 && currentRow < rows.size()) {
+                                CustomKeySpec spec = new CustomKeySpec();
+                                spec.isSpacer = true;
+                                spec.keyWidth = getAttributeValue(parser, "keyWidth", "width");
+                                spec.mode = getAttributeValue(parser, "mode");
+                                spec.imeAction = getAttributeValue(parser, "imeAction");
+                                if (matchesKeyConditions(spec, params, context)) {
+                                    rows.get(currentRow).add(spec);
+                                }
+                            }
+                        } else if ("Replace".equalsIgnoreCase(tagName)) {
+                            String from = getAttributeValue(parser, "from");
+                            String to = getAttributeValue(parser, "to");
+                            if (from != null && to != null) {
+                                replaceRules.add(new CustomReplaceRule(from, to));
+                            }
                         }
-                    } else if ("Spacer".equalsIgnoreCase(tagName)) {
-                        if (currentRow >= 0 && currentRow < rows.size()) {
-                            CustomKeySpec spec = new CustomKeySpec();
-                            spec.isSpacer = true;
-                            spec.keyWidth = getAttributeValue(parser, "keyWidth", "width");
-                            rows.get(currentRow).add(spec);
+                    }
+                } else if (eventType == XmlPullParser.END_TAG) {
+                    String tagName = parser.getName();
+                    if ("switch".equalsIgnoreCase(tagName)) {
+                        if (!switchStack.isEmpty()) {
+                            switchStack.pop();
                         }
-                    } else if ("Replace".equalsIgnoreCase(tagName)) {
-                        String from = getAttributeValue(parser, "from");
-                        String to = getAttributeValue(parser, "to");
-                        if (from != null && to != null) {
-                            replaceRules.add(new CustomReplaceRule(from, to));
+                    } else if ("case".equalsIgnoreCase(tagName) || "default".equalsIgnoreCase(tagName)) {
+                        SwitchState state = switchStack.peek();
+                        if (state != null) {
+                            state.isBranchActive = false;
                         }
                     }
                 }
@@ -156,6 +210,22 @@ public class CustomLayoutLoader {
                     String hint = (spec.hint != null && !spec.hint.trim().isEmpty()) ? spec.hint.trim() : null;
                     String specCodeStr = spec.codes;
                     String specIconStr = spec.keyIcon;
+
+                    boolean isActionKey = false;
+                    if (spec.actionKey != null) {
+                        isActionKey = Boolean.parseBoolean(spec.actionKey);
+                    } else if (spec.keyStyle != null) {
+                        String ks = spec.keyStyle.toLowerCase(java.util.Locale.ROOT);
+                        if (ks.contains("enter") || ks.contains("action")) {
+                            isActionKey = true;
+                        }
+                    } else if ("action".equalsIgnoreCase(specCodeStr)) {
+                        isActionKey = true;
+                    } else if (specCodeStr == null && "enter".equalsIgnoreCase(specIconStr)) {
+                        isActionKey = true;
+                    } else if (specCodeStr == null && specIconStr == null && "⏎".equals(label)) {
+                        isActionKey = true;
+                    }
 
                     if (spec.keyStyle != null) {
                         String ks = spec.keyStyle.toLowerCase(java.util.Locale.ROOT);
@@ -229,6 +299,53 @@ public class CustomLayoutLoader {
                         }
                     }
 
+                    int labelFlags = 0;
+                    if (spec.keyLabelFlags != null && spec.keyLabelFlags.contains("preserveCase")) {
+                        labelFlags |= Key.LABEL_FLAGS_PRESERVE_CASE;
+                    }
+
+                    // Dynamic action/enter key resolution
+                    if (isActionKey) {
+                        code = Constants.CODE_ENTER;
+                        final int imeAction = (params.mId != null) ? params.mId.imeAction() : EditorInfo.IME_ACTION_UNSPECIFIED;
+                        final boolean isMultiLine = (params.mId != null) && params.mId.isMultiLine();
+                        final String customActionLabel = (params.mId != null) ? params.mId.mCustomActionLabel : null;
+
+                        if (!isMultiLine) {
+                            if (customActionLabel != null && !customActionLabel.trim().isEmpty()) {
+                                label = customActionLabel.trim();
+                                iconId = KeyboardIconsSet.ICON_UNDEFINED;
+                                labelFlags |= Key.LABEL_FLAGS_FROM_CUSTOM_ACTION_LABEL | Key.LABEL_FLAGS_PRESERVE_CASE;
+                            } else if (imeAction == EditorInfo.IME_ACTION_SEARCH) {
+                                iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_SEARCH_KEY);
+                                label = null;
+                            } else if (imeAction == EditorInfo.IME_ACTION_SEND) {
+                                iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_SEND_KEY);
+                                label = null;
+                            } else if (imeAction == EditorInfo.IME_ACTION_GO) {
+                                iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_GO_KEY);
+                                label = null;
+                            } else if (imeAction == EditorInfo.IME_ACTION_DONE) {
+                                iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_DONE_KEY);
+                                label = null;
+                            } else if (imeAction == EditorInfo.IME_ACTION_NEXT) {
+                                iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_NEXT_KEY);
+                                label = null;
+                            } else if (imeAction == EditorInfo.IME_ACTION_PREVIOUS) {
+                                iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_PREVIOUS_KEY);
+                                label = null;
+                            } else {
+                                if (iconId == KeyboardIconsSet.ICON_UNDEFINED && (label == null || label.isEmpty())) {
+                                    iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_ENTER_KEY);
+                                }
+                            }
+                        } else {
+                            if (iconId == KeyboardIconsSet.ICON_UNDEFINED && (label == null || label.isEmpty())) {
+                                iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_ENTER_KEY);
+                            }
+                        }
+                    }
+
                     // Derive code from icon if not explicitly set
                     if (code == Constants.CODE_UNSPECIFIED && iconId != KeyboardIconsSet.ICON_UNDEFINED) {
                         if (iconId == KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_LANGUAGE_SWITCH_KEY)) {
@@ -292,15 +409,12 @@ public class CustomLayoutLoader {
                         }
                     }
 
-                    int labelFlags = 0;
-                    if (spec.keyLabelFlags != null && spec.keyLabelFlags.contains("preserveCase")) {
-                        labelFlags |= Key.LABEL_FLAGS_PRESERVE_CASE;
-                    }
-
                     int backgroundType = Key.BACKGROUND_TYPE_NORMAL;
                     if (spec.backgroundType != null) {
                         String bg = spec.backgroundType.trim().toLowerCase(java.util.Locale.ROOT);
-                        if ("functional".equals(bg)) {
+                        if ("action".equals(bg)) {
+                            backgroundType = Key.BACKGROUND_TYPE_ACTION;
+                        } else if ("functional".equals(bg)) {
                             backgroundType = Key.BACKGROUND_TYPE_FUNCTIONAL;
                         } else if ("spacebar".equals(bg)) {
                             backgroundType = Key.BACKGROUND_TYPE_SPACEBAR;
@@ -308,7 +422,9 @@ public class CustomLayoutLoader {
                             backgroundType = Key.BACKGROUND_TYPE_NORMAL;
                         }
                     } else {
-                        if (code == Constants.CODE_SPACE) {
+                        if (isActionKey) {
+                            backgroundType = Key.BACKGROUND_TYPE_ACTION;
+                        } else if (code == Constants.CODE_SPACE) {
                             backgroundType = Key.BACKGROUND_TYPE_SPACEBAR;
                         } else if (code == Constants.CODE_DELETE || code == Constants.CODE_SHIFT
                                 || code == Constants.CODE_ENTER || code == Constants.CODE_LANGUAGE_SWITCH
@@ -324,17 +440,32 @@ public class CustomLayoutLoader {
 
                     String moreKeySpecs = null;
                     if (spec.moreKeys != null && !spec.moreKeys.trim().isEmpty()) {
-                        moreKeySpecs = spec.moreKeys.trim();
+                        moreKeySpecs = normalizeMoreKeys(spec.moreKeys);
                     } else if (spec.longCode != null && !spec.longCode.trim().isEmpty()) {
                         String lc = spec.longCode.trim();
                         String prefix = (hint != null && !hint.trim().isEmpty()) ? hint.trim() : (label != null ? label : " ");
+                        if (",".equals(prefix)) {
+                            prefix = "\\,";
+                        } else if ("%".equals(prefix)) {
+                            prefix = "\\%";
+                        } else if ("|".equals(prefix)) {
+                            prefix = "\\|";
+                        }
                         if (lc.contains("|")) {
                             moreKeySpecs = "!noPanelAutoMoreKey!," + lc;
                         } else {
                             moreKeySpecs = "!noPanelAutoMoreKey!," + prefix + "|" + lc;
                         }
                     } else if (hint != null && !hint.trim().isEmpty()) {
-                        moreKeySpecs = "!noPanelAutoMoreKey!," + hint.trim();
+                        String h = hint.trim();
+                        if (",".equals(h)) {
+                            h = "\\,";
+                        } else if ("%".equals(h)) {
+                            h = "\\%";
+                        } else if ("|".equals(h)) {
+                            h = "\\|";
+                        }
+                        moreKeySpecs = "!noPanelAutoMoreKey!," + h;
                     }
 
                     Key key = new Key(label, iconId, code, outputText, hint, moreKeySpecs, labelFlags, backgroundType, x, y, w, rowHeight, params);
@@ -577,6 +708,206 @@ public class CustomLayoutLoader {
         }
     }
 
+    private static class SwitchState {
+        boolean conditionMatched = false;
+        boolean isBranchActive = false;
+    }
+
+    private static boolean isParentActive(ArrayDeque<SwitchState> switchStack) {
+        int idx = 0;
+        for (SwitchState s : switchStack) {
+            if (idx > 0) {
+                if (!s.isBranchActive) return false;
+            }
+            idx++;
+        }
+        return true;
+    }
+
+    private static boolean isCurrentActive(ArrayDeque<SwitchState> switchStack) {
+        for (SwitchState s : switchStack) {
+            if (!s.isBranchActive) return false;
+        }
+        return true;
+    }
+
+    private static boolean matchesCaseCondition(XmlPullParser parser, KeyboardParams params, Context context) {
+        String mode = getAttributeValue(parser, "mode");
+        if (mode != null && !matchesMode(mode, params)) {
+            return false;
+        }
+
+        String imeAction = getAttributeValue(parser, "imeAction");
+        if (imeAction != null && !matchesImeAction(imeAction, params)) {
+            return false;
+        }
+
+        String isMultiLine = getAttributeValue(parser, "isMultiLine");
+        if (isMultiLine != null && !matchesMultiLine(isMultiLine, params)) {
+            return false;
+        }
+
+        String orientation = getAttributeValue(parser, "orientation");
+        if (orientation != null && !matchesOrientation(orientation, context)) {
+            return false;
+        }
+
+        String keyboardLayoutSet = getAttributeValue(parser, "keyboardLayoutSet");
+        if (keyboardLayoutSet != null && !matchesLayoutSet(keyboardLayoutSet, params)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean matchesKeyConditions(CustomKeySpec spec, KeyboardParams params, Context context) {
+        if (spec.mode != null && !matchesMode(spec.mode, params)) {
+            return false;
+        }
+        if (spec.imeAction != null && !matchesImeAction(spec.imeAction, params)) {
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean matchesMode(String modeSpec, KeyboardParams params) {
+        if (params == null || params.mId == null || modeSpec == null) return true;
+        int currentMode = params.mId.mMode;
+        String[] parts = modeSpec.split("[,|]");
+        boolean hasPositive = false;
+        boolean positiveMatch = false;
+        for (String part : parts) {
+            String p = part.trim();
+            if (p.isEmpty()) continue;
+            if (p.startsWith("!")) {
+                int target = parseMode(p.substring(1).trim());
+                if (currentMode == target) {
+                    return false;
+                }
+            } else {
+                hasPositive = true;
+                int target = parseMode(p);
+                if (currentMode == target) {
+                    positiveMatch = true;
+                }
+            }
+        }
+        if (hasPositive) {
+            return positiveMatch;
+        }
+        return true;
+    }
+
+    private static int parseMode(String s) {
+        String lower = s.toLowerCase(Locale.ROOT);
+        switch (lower) {
+            case "url": return KeyboardId.MODE_URL;
+            case "email": return KeyboardId.MODE_EMAIL;
+            case "im": return KeyboardId.MODE_IM;
+            case "phone": return KeyboardId.MODE_PHONE;
+            case "number": return KeyboardId.MODE_NUMBER;
+            case "date": return KeyboardId.MODE_DATE;
+            case "time": return KeyboardId.MODE_TIME;
+            case "datetime": return KeyboardId.MODE_DATETIME;
+            case "text":
+            default:
+                return KeyboardId.MODE_TEXT;
+        }
+    }
+
+    private static boolean matchesImeAction(String actionSpec, KeyboardParams params) {
+        if (params == null || params.mId == null || actionSpec == null) return true;
+        int currentAction = params.mId.imeAction();
+        String[] parts = actionSpec.split("[,|]");
+        boolean hasPositive = false;
+        boolean positiveMatch = false;
+        for (String part : parts) {
+            String p = part.trim();
+            if (p.isEmpty()) continue;
+            if (p.startsWith("!")) {
+                int target = parseImeAction(p.substring(1).trim());
+                if (currentAction == target) {
+                    return false;
+                }
+            } else {
+                hasPositive = true;
+                int target = parseImeAction(p);
+                if (currentAction == target) {
+                    positiveMatch = true;
+                }
+            }
+        }
+        if (hasPositive) {
+            return positiveMatch;
+        }
+        return true;
+    }
+
+    private static int parseImeAction(String s) {
+        String lower = s.toLowerCase(Locale.ROOT);
+        switch (lower) {
+            case "actionsearch":
+            case "search":
+                return EditorInfo.IME_ACTION_SEARCH;
+            case "actionsend":
+            case "send":
+                return EditorInfo.IME_ACTION_SEND;
+            case "actiongo":
+            case "go":
+                return EditorInfo.IME_ACTION_GO;
+            case "actiondone":
+            case "done":
+                return EditorInfo.IME_ACTION_DONE;
+            case "actionnext":
+            case "next":
+                return EditorInfo.IME_ACTION_NEXT;
+            case "actionprevious":
+            case "previous":
+                return EditorInfo.IME_ACTION_PREVIOUS;
+            case "actionnone":
+            case "none":
+                return EditorInfo.IME_ACTION_NONE;
+            default:
+                return EditorInfo.IME_ACTION_UNSPECIFIED;
+        }
+    }
+
+    private static boolean matchesMultiLine(String multiLineSpec, KeyboardParams params) {
+        if (params == null || params.mId == null) return true;
+        boolean isMultiLine = params.mId.isMultiLine();
+        return Boolean.parseBoolean(multiLineSpec) == isMultiLine;
+    }
+
+    private static boolean matchesOrientation(String orientSpec, Context context) {
+        if (context == null || orientSpec == null) return true;
+        int orientation = context.getResources().getConfiguration().orientation;
+        boolean isLandscape = (orientation == Configuration.ORIENTATION_LANDSCAPE);
+        if ("landscape".equalsIgnoreCase(orientSpec) || "land".equalsIgnoreCase(orientSpec)) return isLandscape;
+        if ("portrait".equalsIgnoreCase(orientSpec) || "port".equalsIgnoreCase(orientSpec)) return !isLandscape;
+        return true;
+    }
+
+    private static boolean matchesLayoutSet(String layoutSetSpec, KeyboardParams params) {
+        if (params == null || params.mId == null || params.mId.mSubtype == null) return true;
+        String current = params.mId.mSubtype.getKeyboardLayoutSetName();
+        return layoutSetSpec.equalsIgnoreCase(current);
+    }
+
+    private static String normalizeMoreKeys(String moreKeys) {
+        if (moreKeys == null) return null;
+        String trimmed = moreKeys.trim();
+        if (trimmed.isEmpty()) return null;
+
+        if (",".equals(trimmed)) {
+            return "\\,";
+        }
+
+        return trimmed
+                .replace("\\\\,", "\\,")
+                .replace("\\\\%", "\\%")
+                .replace("\\\\|", "\\|");
+    }
+
     private static class CustomKeySpec {
         String label;
         String codes;
@@ -588,6 +919,9 @@ public class CustomLayoutLoader {
         String hint;
         String keyStyle;
         String keyLabelFlags;
+        String mode;
+        String imeAction;
+        String actionKey;
         boolean isSpacer;
     }
 }

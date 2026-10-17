@@ -33,7 +33,7 @@ more pics: [here](pics/README.md)
 
 For instructions on customizing and configuring the keyboard, please refer to the documentation files in the [docs](docs) directory:
 
-* [Custom Layout XML Format](docs/layout_format.md) — How to define and load custom keyboard layouts.
+* [Custom Layout XML Format](docs/layout_format.md) ([Русский](docs/layout_format_ru.md)) — How to define and load custom keyboard layouts.
 * [Custom Theme JSON Format](docs/theme_format.md) — How to load and customize theme colors.
 * [Layout Reference](docs/default_layouts.md) — Reference documentation on the default layout versions (V1, V2, V3) and edit mode.
 * [Default Layout Sources](app/src/main/res/xml/) — Built-in XML layout definitions in the source tree (templates for custom layouts).
