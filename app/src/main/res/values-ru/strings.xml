@@ -251,7 +251,9 @@
     <string name="pref_keyboard_layout_ru_title">Русская раскладка (ru)</string>
     <string name="pref_keyboard_layout_en_title">Английская раскладка (en)</string>
     <string name="pref_keyboard_layout_editing_title">Раскладка редактирования / стрелок</string>
-    <string name="pref_keyboard_layout_num_title">num</string>
+    <string name="pref_keyboard_layout_num_title">Цифровая раскладка</string>
+    <string name="pref_replace_yo_with_ye_title">Заменять букву «ё» на «е» в словарях</string>
+    <string name="pref_replace_yo_with_ye_summary">Предлагать подсказки из словарей с буквой «е» вместо «ё»</string>
     <string name="pref_keyboard_layout_usr0_title">Пользовательская раскладка 1 (usr0)</string>
     <string name="pref_keyboard_layout_usr1_title">Пользовательская раскладка 2 (usr1)</string>
     <string name="pref_keyboard_layout_usr2_title">Пользовательская раскладка 3 (usr2)</string>

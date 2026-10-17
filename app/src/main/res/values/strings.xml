@@ -568,7 +568,9 @@ disposition rather than other common dispositions for Latin languages. [CHAR LIM
     <string name="pref_keyboard_layout_ru_title">Russian layout (ru)</string>
     <string name="pref_keyboard_layout_en_title">English layout (en)</string>
     <string name="pref_keyboard_layout_editing_title">Editing / navigation layout</string>
-    <string name="pref_keyboard_layout_num_title">num</string>
+    <string name="pref_keyboard_layout_num_title">Numeric layout</string>
+    <string name="pref_replace_yo_with_ye_title">Replace \"ё\" with \"е\" in dictionaries</string>
+    <string name="pref_replace_yo_with_ye_summary">Suggest words with letter \"е\" instead of \"ё\"</string>
     <string name="pref_keyboard_layout_usr0_title">User layout 1 (usr0)</string>
     <string name="pref_keyboard_layout_usr1_title">User layout 2 (usr1)</string>
     <string name="pref_keyboard_layout_usr2_title">User layout 3 (usr2)</string>

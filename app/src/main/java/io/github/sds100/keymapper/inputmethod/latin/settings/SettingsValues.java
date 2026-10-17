@@ -87,6 +87,7 @@ public class SettingsValues {
     public final boolean mUseDoubleSpacePeriod;
     public final boolean mUseMultiSpacePunctuation;
     public final boolean mBlockPotentiallyOffensive;
+    public final boolean mReplaceYoWithYe;
     public final boolean mSpaceTrackpadEnabled;
     public final boolean mDeleteSwipeEnabled;
     public final boolean mAutospaceAfterPunctuationEnabled;
@@ -195,6 +196,7 @@ public class SettingsValues {
                 && inputAttributes.mIsGeneralTextInput;
         mUseMultiSpacePunctuation = prefs.getBoolean(Settings.PREF_KEY_USE_MULTI_SPACE_PUNCTUATION, false);
         mBlockPotentiallyOffensive = Settings.readBlockPotentiallyOffensive(prefs, res);
+        mReplaceYoWithYe = prefs.getBoolean(Settings.PREF_REPLACE_YO_WITH_YE, false);
         mAutoCorrectEnabled = Settings.readAutoCorrectEnabled(prefs, res);
         mAutoCorrectionThreshold = mAutoCorrectEnabled
                 ? readAutoCorrectionThreshold(res, prefs)

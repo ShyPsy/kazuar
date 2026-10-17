@@ -141,7 +141,8 @@ public final class Suggest {
 
     private static ArrayList<SuggestedWordInfo> getTransformedSuggestedWordInfoList(
             final WordComposer wordComposer, final SuggestionResults results,
-            final int trailingSingleQuotesCount, final Locale defaultLocale) {
+            final int trailingSingleQuotesCount, final Locale defaultLocale,
+            final boolean replaceYoWithYe) {
         final boolean shouldMakeSuggestionsAllUpperCase = wordComposer.isAllUpperCase()
                 && !wordComposer.isResumed();
         final boolean isOnlyFirstCharCapitalized =
@@ -150,14 +151,14 @@ public final class Suggest {
         final ArrayList<SuggestedWordInfo> suggestionsContainer = new ArrayList<>(results);
         final int suggestionsCount = suggestionsContainer.size();
         if (isOnlyFirstCharCapitalized || shouldMakeSuggestionsAllUpperCase
-                || 0 != trailingSingleQuotesCount) {
+                || 0 != trailingSingleQuotesCount || replaceYoWithYe) {
             for (int i = 0; i < suggestionsCount; ++i) {
                 final SuggestedWordInfo wordInfo = suggestionsContainer.get(i);
                 final Locale wordLocale = wordInfo.mSourceDict.mLocale;
                 final SuggestedWordInfo transformedWordInfo = getTransformedSuggestedWordInfo(
                         wordInfo, null == wordLocale ? defaultLocale : wordLocale,
                         shouldMakeSuggestionsAllUpperCase, isOnlyFirstCharCapitalized,
-                        trailingSingleQuotesCount);
+                        trailingSingleQuotesCount, replaceYoWithYe);
                 suggestionsContainer.set(i, transformedWordInfo);
             }
         }
@@ -280,11 +281,13 @@ public final class Suggest {
             final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final int inputStyleIfNotPrediction, final boolean isCorrectionEnabled,
             final int sequenceNumber, final OnGetSuggestedWordsCallback callback) {
+        final boolean replaceYo = settingsValuesForSuggestion != null
+                && settingsValuesForSuggestion.mReplaceYoWithYe;
         final boolean resultsArePredictions = !wordComposer.isComposingWord();
         if (resultsArePredictions && mDictionaryFacilitator.hasAtLeastOneInitializedMainDictionary()) {
             final Locale locale = mDictionaryFacilitator.getLocale();
             final String contextStr = ngramContext != null ? ngramContext.extractPrevWordsContext() : "";
-            final String cacheKey = (locale != null ? locale.toLanguageTag() : "") + ":" + contextStr;
+            final String cacheKey = (locale != null ? locale.toLanguageTag() : "") + ":" + replaceYo + ":" + contextStr;
             final PredictionCacheEntry cached = mPredictionCache.get(cacheKey);
             if (cached != null) {
                 final ArrayList<SuggestedWordInfo> suggestionsList = new ArrayList<>(cached.mSuggestionsList);
@@ -320,7 +323,7 @@ public final class Suggest {
         final Locale locale = mDictionaryFacilitator.getLocale();
         final ArrayList<SuggestedWordInfo> suggestionsContainer =
                 getTransformedSuggestedWordInfoList(wordComposer, suggestionResults,
-                        trailingSingleQuotesCount, locale);
+                        trailingSingleQuotesCount, locale, replaceYo);
 
         boolean foundInDictionary = false;
         Dictionary sourceDictionaryOfRemovedWord = null;
@@ -400,8 +403,9 @@ public final class Suggest {
         } else if (splitSuggestion != null) {
             hasAutoCorrection = true;
         } else {
-            final SuggestedWordInfo firstSuggestion = suggestionResults.first();
-            if (suggestionResults.mFirstSuggestionExceedsConfidenceThreshold
+            final SuggestedWordInfo firstSuggestion = suggestionsContainer.isEmpty() ? null
+                    : suggestionsContainer.get(0);
+            if (firstSuggestion != null && suggestionResults.mFirstSuggestionExceedsConfidenceThreshold
                     && firstOcurrenceOfTypedWordInSuggestions != 0) {
                 hasAutoCorrection = true;
             } else if (!AutoCorrectionUtils.suggestionExceedsThreshold(
@@ -439,15 +443,15 @@ public final class Suggest {
         final int inputStyle;
         if (resultsArePredictions) {
             inputStyle = suggestionResults.mIsBeginningOfSentence
-                    ? SuggestedWords.INPUT_STYLE_BEGINNING_OF_SENTENCE_PREDICTION
-                    : SuggestedWords.INPUT_STYLE_PREDICTION;
+                ? SuggestedWords.INPUT_STYLE_BEGINNING_OF_SENTENCE_PREDICTION
+                : SuggestedWords.INPUT_STYLE_PREDICTION;
         } else {
             inputStyle = inputStyleIfNotPrediction;
         }
 
         if (resultsArePredictions && mDictionaryFacilitator.hasAtLeastOneInitializedMainDictionary()) {
             final String contextStr = ngramContext != null ? ngramContext.extractPrevWordsContext() : "";
-            final String cacheKey = (locale != null ? locale.toLanguageTag() : "") + ":" + contextStr;
+            final String cacheKey = (locale != null ? locale.toLanguageTag() : "") + ":" + replaceYo + ":" + contextStr;
             mPredictionCache.put(cacheKey, new PredictionCacheEntry(
                     new ArrayList<>(suggestionsList),
                     suggestionResults.mRawSuggestions != null
@@ -482,13 +486,15 @@ public final class Suggest {
         final int suggestionsCount = suggestionsContainer.size();
         final boolean isFirstCharCapitalized = wordComposer.wasShiftedNoLock();
         final boolean isAllUpperCase = wordComposer.isAllUpperCase();
-        if (isFirstCharCapitalized || isAllUpperCase) {
+        final boolean replaceYoWithYe = settingsValuesForSuggestion != null
+                && settingsValuesForSuggestion.mReplaceYoWithYe;
+        if (isFirstCharCapitalized || isAllUpperCase || replaceYoWithYe) {
             for (int i = 0; i < suggestionsCount; ++i) {
                 final SuggestedWordInfo wordInfo = suggestionsContainer.get(i);
                 final Locale wordlocale = wordInfo.mSourceDict.mLocale;
                 final SuggestedWordInfo transformedWordInfo = getTransformedSuggestedWordInfo(
                         wordInfo, null == wordlocale ? locale : wordlocale, isAllUpperCase,
-                        isFirstCharCapitalized, 0 /* trailingSingleQuotesCount */);
+                        isFirstCharCapitalized, 0 /* trailingSingleQuotesCount */, replaceYoWithYe);
                 suggestionsContainer.set(i, transformedWordInfo);
             }
         }
@@ -590,7 +596,8 @@ public final class Suggest {
 
     /* package for test */ static SuggestedWordInfo getTransformedSuggestedWordInfo(
             final SuggestedWordInfo wordInfo, final Locale locale, final boolean isAllUpperCase,
-            final boolean isOnlyFirstCharCapitalized, final int trailingSingleQuotesCount) {
+            final boolean isOnlyFirstCharCapitalized, final int trailingSingleQuotesCount,
+            final boolean replaceYoWithYe) {
         final StringBuilder sb = new StringBuilder(wordInfo.mWord.length());
         if (isAllUpperCase) {
             sb.append(wordInfo.mWord.toUpperCase(locale));
@@ -607,9 +614,20 @@ public final class Suggest {
         for (int i = quotesToAppend - 1; i >= 0; --i) {
             sb.appendCodePoint(Constants.CODE_SINGLE_QUOTE);
         }
-        return new SuggestedWordInfo(sb.toString(), wordInfo.mPrevWordsContext,
+        String transformedWord = sb.toString();
+        if (replaceYoWithYe && (transformedWord.indexOf('ё') >= 0 || transformedWord.indexOf('Ё') >= 0)) {
+            transformedWord = transformedWord.replace('ё', 'е').replace('Ё', 'Е');
+        }
+        return new SuggestedWordInfo(transformedWord, wordInfo.mPrevWordsContext,
                 wordInfo.mScore, wordInfo.mKindAndFlags,
                 wordInfo.mSourceDict, wordInfo.mIndexOfTouchPointOfSecondWord,
                 wordInfo.mAutoCommitFirstWordConfidence);
+    }
+
+    /* package for test */ static SuggestedWordInfo getTransformedSuggestedWordInfo(
+            final SuggestedWordInfo wordInfo, final Locale locale, final boolean isAllUpperCase,
+            final boolean isOnlyFirstCharCapitalized, final int trailingSingleQuotesCount) {
+        return getTransformedSuggestedWordInfo(wordInfo, locale, isAllUpperCase,
+                isOnlyFirstCharCapitalized, trailingSingleQuotesCount, false /* replaceYoWithYe */);
     }
 }

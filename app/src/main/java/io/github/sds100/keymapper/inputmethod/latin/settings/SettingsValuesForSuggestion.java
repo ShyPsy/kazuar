@@ -18,8 +18,15 @@ package io.github.sds100.keymapper.inputmethod.latin.settings;
 
 public class SettingsValuesForSuggestion {
     public final boolean mBlockPotentiallyOffensive;
+    public final boolean mReplaceYoWithYe;
+
+    public SettingsValuesForSuggestion(final boolean blockPotentiallyOffensive,
+            final boolean replaceYoWithYe) {
+        mBlockPotentiallyOffensive = blockPotentiallyOffensive;
+        mReplaceYoWithYe = replaceYoWithYe;
+    }
 
     public SettingsValuesForSuggestion(final boolean blockPotentiallyOffensive) {
-        mBlockPotentiallyOffensive = blockPotentiallyOffensive;
+        this(blockPotentiallyOffensive, false);
     }
 }

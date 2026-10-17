@@ -65,6 +65,12 @@
             android:defaultValue="true"
             android:persistent="true" />
 
+        <CheckBoxPreference
+            android:key="pref_key_replace_yo_with_ye"
+            android:title="@string/pref_replace_yo_with_ye_title"
+            android:summary="@string/pref_replace_yo_with_ye_summary"
+            android:defaultValue="false"
+            android:persistent="true" />
     </PreferenceCategory>
 
     <PreferenceCategory
