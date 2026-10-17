@@ -81,13 +81,32 @@ public final class KeyboardLayoutSet {
 
     // How many layouts we forcibly keep in cache so switching between active
     // layouts (alphabet, symbols, editing, num, user layouts) is instantaneous and not evicted by GC.
-    private static final int FORCIBLE_CACHE_SIZE = 12;
+    private static final int FORCIBLE_CACHE_SIZE = 16;
     // By construction of soft references, anything that is also referenced somewhere else
     // will stay in the cache. So we forcibly keep some references in an array to prevent
     // them from disappearing from sKeyboardCache.
     private static final Keyboard[] sForcibleKeyboardCache = new Keyboard[FORCIBLE_CACHE_SIZE];
     private static final HashMap<KeyboardId, SoftReference<Keyboard>> sKeyboardCache =
             new HashMap<>();
+
+    private static void keepInForcibleCache(final Keyboard keyboard) {
+        if (sForcibleKeyboardCache[0] == keyboard) {
+            return;
+        }
+        int existingIndex = -1;
+        for (int i = 0; i < sForcibleKeyboardCache.length; ++i) {
+            if (sForcibleKeyboardCache[i] == keyboard) {
+                existingIndex = i;
+                break;
+            }
+        }
+        final int limit = (existingIndex != -1) ? existingIndex : sForcibleKeyboardCache.length - 1;
+        for (int i = limit; i >= 1; --i) {
+            sForcibleKeyboardCache[i] = sForcibleKeyboardCache[i - 1];
+        }
+        sForcibleKeyboardCache[0] = keyboard;
+    }
+
     @Nonnull
     private static final UniqueKeysCache sUniqueKeysCache = UniqueKeysCache.newInstance();
     private final static HashMap<InputMethodSubtype, Integer> sScriptIdsForSubtypes =
@@ -154,6 +173,7 @@ public final class KeyboardLayoutSet {
         sKeyboardCache.clear();
         sUniqueKeysCache.clear();
         Arrays.fill(sForcibleKeyboardCache, null);
+        Builder.clearLayoutSetStructureCache();
     }
 
     public static int getScriptId(final Resources resources,
@@ -241,6 +261,9 @@ public final class KeyboardLayoutSet {
         if (cachedKeyboard != null) {
             if (DEBUG_CACHE) {
                 Log.d(TAG, "keyboard cache size=" + sKeyboardCache.size() + ": HIT  id=" + id);
+            }
+            if (!mParams.mIsSpellChecker) {
+                keepInForcibleCache(cachedKeyboard);
             }
             return cachedKeyboard;
         }
@@ -342,12 +365,7 @@ public final class KeyboardLayoutSet {
         final Keyboard keyboard = builder.build();
         sKeyboardCache.put(id, new SoftReference<>(keyboard));
         if (!mParams.mIsSpellChecker) {
-            // Forcibly cache all active and recently used layouts so switching
-            // between them is instantaneous and never evicted by GC.
-            for (int i = sForcibleKeyboardCache.length - 1; i >= 1; --i) {
-                sForcibleKeyboardCache[i] = sForcibleKeyboardCache[i - 1];
-            }
-            sForcibleKeyboardCache[0] = keyboard;
+            keepInForcibleCache(keyboard);
             if (DEBUG_CACHE) {
                 Log.d(TAG, "forcing caching of keyboard with id=" + id);
             }
@@ -496,6 +514,22 @@ public final class KeyboardLayoutSet {
             }
         }
 
+        private static final class LayoutSetStructure {
+            final SparseArray<ElementParams> mElementIdToParamsMap;
+            final int mScriptId;
+
+            LayoutSetStructure(final SparseArray<ElementParams> map, final int scriptId) {
+                mElementIdToParamsMap = map;
+                mScriptId = scriptId;
+            }
+        }
+
+        private static final SparseArray<LayoutSetStructure> sLayoutSetStructureCache = new SparseArray<>();
+
+        public static void clearLayoutSetStructureCache() {
+            sLayoutSetStructureCache.clear();
+        }
+
         public KeyboardLayoutSet build() {
             if (mParams.mSubtype == null)
                 throw new RuntimeException("KeyboardLayoutSet subtype is not specified");
@@ -505,11 +539,28 @@ public final class KeyboardLayoutSet {
                 mParams.mKeyboardLayoutSetName = KEYBOARD_LAYOUT_SET_RESOURCE_PREFIX + "qwerty";
                 xmlId = getXmlId(mResources, mParams.mKeyboardLayoutSetName);
             }
-            try {
-                parseKeyboardLayoutSet(mResources, xmlId);
-            } catch (final IOException | XmlPullParserException e) {
-                throw new RuntimeException(e.getMessage() + " in " + mParams.mKeyboardLayoutSetName,
-                        e);
+            final LayoutSetStructure cached = sLayoutSetStructureCache.get(xmlId);
+            if (cached != null) {
+                final SparseArray<ElementParams> map = cached.mElementIdToParamsMap;
+                final int size = map.size();
+                for (int i = 0; i < size; ++i) {
+                    mParams.mKeyboardLayoutSetElementIdToParamsMap.put(map.keyAt(i), map.valueAt(i));
+                }
+                mParams.mScriptId = cached.mScriptId;
+            } else {
+                try {
+                    parseKeyboardLayoutSet(mResources, xmlId);
+                } catch (final IOException | XmlPullParserException e) {
+                    throw new RuntimeException(e.getMessage() + " in " + mParams.mKeyboardLayoutSetName,
+                            e);
+                }
+                final SparseArray<ElementParams> mapCopy = new SparseArray<>();
+                final SparseArray<ElementParams> origMap = mParams.mKeyboardLayoutSetElementIdToParamsMap;
+                final int size = origMap.size();
+                for (int i = 0; i < size; ++i) {
+                    mapCopy.put(origMap.keyAt(i), origMap.valueAt(i));
+                }
+                sLayoutSetStructureCache.put(xmlId, new LayoutSetStructure(mapCopy, mParams.mScriptId));
             }
             return new KeyboardLayoutSet(mContext, mParams);
         }

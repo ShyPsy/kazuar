@@ -19,11 +19,16 @@ package io.github.sds100.keymapper.inputmethod.keyboard;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.os.Looper;
+import android.os.MessageQueue;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodSubtype;
+
+import java.util.List;
 
 import io.github.sds100.keymapper.inputmethod.event.Event;
 import io.github.sds100.keymapper.inputmethod.keyboard.KeyboardLayoutSet.KeyboardLayoutSetException;
@@ -36,6 +41,7 @@ import io.github.sds100.keymapper.inputmethod.latin.KeyboardWrapperView;
 import io.github.sds100.keymapper.inputmethod.latin.LatinIME;
 import io.github.sds100.keymapper.inputmethod.latin.R;
 import io.github.sds100.keymapper.inputmethod.latin.RichInputMethodManager;
+import io.github.sds100.keymapper.inputmethod.latin.RichInputMethodSubtype;
 import io.github.sds100.keymapper.inputmethod.latin.WordComposer;
 import io.github.sds100.keymapper.inputmethod.latin.define.ProductionFlags;
 import io.github.sds100.keymapper.inputmethod.latin.settings.Settings;
@@ -70,6 +76,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private KeyboardTheme mKeyboardTheme;
     private Context mThemeContext;
     private int mCurrentUiMode;
+    private boolean mKeyboardsPrewarmed = false;
+    private int mLastPrewarmedWidth = 0;
+    private int mLastPrewarmedHeight = 0;
 
     private static final KeyboardSwitcher sInstance = new KeyboardSwitcher();
 
@@ -109,6 +118,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             mThemeContext = new ContextThemeWrapper(context, keyboardTheme.mStyleId);
             mCurrentUiMode = context.getResources().getConfiguration().uiMode;
             KeyboardLayoutSet.onKeyboardThemeChanged();
+            mKeyboardsPrewarmed = false;
             return true;
         }
         return false;
@@ -139,6 +149,70 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             mKeyboardTextsSet.setLocale(mRichImm.getCurrentSubtypeLocale(), mThemeContext);
         } catch (KeyboardLayoutSetException e) {
             Log.w(TAG, "loading keyboard failed: " + e.mKeyboardId, e.getCause());
+        }
+        scheduleKeyboardPrewarming(editorInfo, settingsValues, keyboardWidth, keyboardHeight, oneHandedModeEnabled);
+    }
+
+    private void scheduleKeyboardPrewarming(final EditorInfo editorInfo, final SettingsValues settingsValues,
+                                            final int keyboardWidth, final int keyboardHeight,
+                                            final boolean oneHandedModeEnabled) {
+        final boolean geometryChanged = (mLastPrewarmedWidth != keyboardWidth || mLastPrewarmedHeight != keyboardHeight);
+        if (mKeyboardsPrewarmed && !geometryChanged) {
+            return;
+        }
+        mLastPrewarmedWidth = keyboardWidth;
+        mLastPrewarmedHeight = keyboardHeight;
+        mKeyboardsPrewarmed = true;
+
+        Looper.myQueue().addIdleHandler(new MessageQueue.IdleHandler() {
+            @Override
+            public boolean queueIdle() {
+                prewarmKeyboards(editorInfo, settingsValues, keyboardWidth, keyboardHeight, oneHandedModeEnabled);
+                return false;
+            }
+        });
+    }
+
+    private void prewarmKeyboards(final EditorInfo editorInfo, final SettingsValues settingsValues,
+                                  final int keyboardWidth, final int keyboardHeight,
+                                  final boolean oneHandedModeEnabled) {
+        if (mKeyboardLayoutSet == null || mThemeContext == null) {
+            return;
+        }
+        try {
+            // Prewarm primary layers: symbols, shifted symbols, editing, number
+            mKeyboardLayoutSet.getKeyboard(KeyboardId.ELEMENT_SYMBOLS);
+            mKeyboardLayoutSet.getKeyboard(KeyboardId.ELEMENT_SYMBOLS_SHIFTED);
+            mKeyboardLayoutSet.getKeyboard(KeyboardId.ELEMENT_EDITING);
+            mKeyboardLayoutSet.getKeyboard(KeyboardId.ELEMENT_NUMBER);
+
+            // Prewarm alternate enabled subtypes (e.g. RU <-> EN)
+            final List<InputMethodSubtype> subtypes = mRichImm.getMyEnabledInputMethodSubtypeList(true);
+            final RichInputMethodSubtype currentRichSubtype = mRichImm.getCurrentSubtype();
+            final InputMethodSubtype currentRawSubtype = currentRichSubtype != null
+                    ? currentRichSubtype.getRawSubtype() : null;
+
+            for (final InputMethodSubtype subtype : subtypes) {
+                if (subtype == null || subtype.equals(currentRawSubtype)) {
+                    continue;
+                }
+                final KeyboardLayoutSet.Builder altBuilder = new KeyboardLayoutSet.Builder(
+                        mThemeContext, editorInfo);
+                altBuilder.setKeyboardGeometry(keyboardWidth, keyboardHeight);
+                altBuilder.setSubtype(RichInputMethodSubtype.getRichInputMethodSubtype(subtype));
+                altBuilder.setVoiceInputKeyEnabled(settingsValues.mShowsVoiceInputKey);
+                altBuilder.setNumberRowEnabled(settingsValues.mShowsNumberRow);
+                altBuilder.setLanguageSwitchKeyEnabled(mLatinIME.shouldShowLanguageSwitchKey());
+                altBuilder.setEmojiKeyEnabled(settingsValues.mShowsEmojiKey);
+                altBuilder.setSplitLayoutEnabledByUser(ProductionFlags.IS_SPLIT_KEYBOARD_SUPPORTED
+                        && settingsValues.mIsSplitKeyboardEnabled
+                        && !settingsValues.mOneHandedModeEnabled);
+                altBuilder.setOneHandedModeEnabled(oneHandedModeEnabled);
+                final KeyboardLayoutSet altSet = altBuilder.build();
+                altSet.getKeyboard(KeyboardId.ELEMENT_ALPHABET);
+            }
+        } catch (final Throwable t) {
+            Log.w(TAG, "prewarmKeyboards failed non-critically", t);
         }
     }
 
@@ -339,10 +413,14 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         // @see #getVisibleKeyboardView() and
         // @see LatinIME#onComputeInset(android.inputmethodservice.InputMethodService.Insets)
         mMainKeyboardFrame.setVisibility(visibility);
-        mEmojiPalettesView.setVisibility(View.GONE);
-        mEmojiPalettesView.stopEmojiPalettes();
-        mClipboardHistoryView.setVisibility(View.GONE);
-        mClipboardHistoryView.stopClipboardHistory();
+        if (mEmojiPalettesView != null && (mEmojiPalettesView.getVisibility() != View.GONE || isShowingEmojiPalettes())) {
+            mEmojiPalettesView.setVisibility(View.GONE);
+            mEmojiPalettesView.stopEmojiPalettes();
+        }
+        if (mClipboardHistoryView != null && (mClipboardHistoryView.getVisibility() != View.GONE || isShowingClipboardHistory())) {
+            mClipboardHistoryView.setVisibility(View.GONE);
+            mClipboardHistoryView.stopClipboardHistory();
+        }
     }
 
     // Implements {@link KeyboardState.SwitchActions}.
@@ -442,11 +520,14 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             } else if (toggleState == KeyboardSwitchState.CLIPBOARD) {
                 setClipboardKeyboard();
             } else {
-                mEmojiPalettesView.stopEmojiPalettes();
-                mEmojiPalettesView.setVisibility(View.GONE);
-
-                mClipboardHistoryView.stopClipboardHistory();
-                mClipboardHistoryView.setVisibility(View.GONE);
+                if (mEmojiPalettesView != null && (mEmojiPalettesView.getVisibility() != View.GONE || isShowingEmojiPalettes())) {
+                    mEmojiPalettesView.setVisibility(View.GONE);
+                    mEmojiPalettesView.stopEmojiPalettes();
+                }
+                if (mClipboardHistoryView != null && (mClipboardHistoryView.getVisibility() != View.GONE || isShowingClipboardHistory())) {
+                    mClipboardHistoryView.setVisibility(View.GONE);
+                    mClipboardHistoryView.stopClipboardHistory();
+                }
 
                 mMainKeyboardFrame.setVisibility(View.VISIBLE);
                 mKeyboardView.setVisibility(View.VISIBLE);

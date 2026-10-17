@@ -385,6 +385,9 @@ public final class MainKeyboardView extends KeyboardView implements
      */
     @Override
     public void setKeyboard(final Keyboard keyboard) {
+        if (getKeyboard() == keyboard) {
+            return;
+        }
         // Remove any pending messages, except dismissing preview and key repeat.
         mTimerHandler.cancelLongPressTimers();
         super.setKeyboard(keyboard);

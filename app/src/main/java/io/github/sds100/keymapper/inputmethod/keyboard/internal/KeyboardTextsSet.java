@@ -40,13 +40,20 @@ public final class KeyboardTextsSet {
     private Locale mResourceLocale;
     private String mResourcePackageName;
     private String[] mTextsTable;
+    private static String sCachedPackageName = null;
 
     public void setLocale(final Locale locale, final Context context) {
         final Resources res = context.getResources();
         // Null means the current system locale.
-        final String resourcePackageName = res.getResourcePackageName(
-                context.getApplicationInfo().labelRes);
-        setLocale(locale, res, resourcePackageName);
+        if (sCachedPackageName == null) {
+            try {
+                sCachedPackageName = res.getResourcePackageName(
+                        context.getApplicationInfo().labelRes);
+            } catch (Exception e) {
+                sCachedPackageName = context.getPackageName();
+            }
+        }
+        setLocale(locale, res, sCachedPackageName);
     }
 
     @UsedForTesting

@@ -815,12 +815,8 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (currentSettingsValues != null) {
             AudioAndHapticFeedbackManager.getInstance().onSettingsChanged(currentSettingsValues);
         }
-        // This method is called on startup and language switch, before the new layout has
-        // been displayed. Opening dictionaries never affects responsivity as dictionaries are
-        // asynchronously loaded.
-        if (!mHandler.hasPendingReopenDictionaries()) {
-            resetDictionaryFacilitator(locale);
-        }
+        // Dictionaries are managed conditionally by resetDictionaryFacilitatorIfNecessary(),
+        // avoiding unconditional synchronous resets and prediction cache flushes on every field tap.
         refreshPersonalizationDictionarySession(currentSettingsValues);
         resetDictionaryFacilitatorIfNecessary();
     }

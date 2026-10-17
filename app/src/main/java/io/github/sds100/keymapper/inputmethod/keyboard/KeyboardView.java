@@ -17,6 +17,7 @@
 package io.github.sds100.keymapper.inputmethod.keyboard;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -86,6 +87,8 @@ public class KeyboardView extends View {
     private final KeyVisualAttributes mKeyVisualAttributes;
     private boolean mIsCustomTheme = false;
     private CustomThemeHelper.ThemeColors mCustomColors = null;
+    private int mLastThemeId = -1;
+    private int mLastNightMode = -1;
     // Default keyLabelFlags from {@link KeyboardTheme}.
     // Currently only "alignHintLabelToBottom" is supported.
     private final int mDefaultKeyLabelFlags;
@@ -209,12 +212,39 @@ public class KeyboardView extends View {
      * @param keyboard the keyboard to display in this view
      */
     public void setKeyboard(@Nonnull final Keyboard keyboard) {
+        if (mKeyboard == keyboard) {
+            return;
+        }
+        final boolean dimensionsChanged = mKeyboard == null
+                || mKeyboard.mOccupiedWidth != keyboard.mOccupiedWidth
+                || mKeyboard.mOccupiedHeight != keyboard.mOccupiedHeight;
         mKeyboard = keyboard;
         final int keyHeight = keyboard.mMostCommonKeyHeight - keyboard.mVerticalGap;
         mKeyDrawParams.updateParams(keyHeight, mKeyVisualAttributes);
         mKeyDrawParams.updateParams(keyHeight, keyboard.mKeyVisualAttributes);
+        updateCustomThemeColors();
         invalidateAllKeys();
-        requestLayout();
+        if (dimensionsChanged) {
+            requestLayout();
+        }
+    }
+
+    public void updateCustomThemeColors() {
+        final KeyboardTheme theme = KeyboardTheme.getKeyboardTheme(getContext());
+        final int themeId = theme != null ? theme.mThemeId : -1;
+        final int currentNightMode = getContext().getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK;
+        if (themeId == mLastThemeId && currentNightMode == mLastNightMode && (themeId != KeyboardTheme.THEME_ID_CUSTOM || mCustomColors != null)) {
+            return;
+        }
+        mLastThemeId = themeId;
+        mLastNightMode = currentNightMode;
+        mCustomColors = null;
+        mIsCustomTheme = false;
+        if (themeId == KeyboardTheme.THEME_ID_CUSTOM) {
+            mCustomColors = CustomThemeHelper.getCustomThemeColors(getContext());
+            mIsCustomTheme = (mCustomColors != null);
+        }
     }
 
     /**
@@ -255,14 +285,6 @@ public class KeyboardView extends View {
 
     @Override
     protected void onDraw(final Canvas canvas) {
-        mCustomColors = null;
-        mIsCustomTheme = false;
-        final KeyboardTheme theme = KeyboardTheme.getKeyboardTheme(getContext());
-        if (theme != null && theme.mThemeId == KeyboardTheme.THEME_ID_CUSTOM) {
-            mCustomColors = CustomThemeHelper.getCustomThemeColors(getContext());
-            mIsCustomTheme = (mCustomColors != null);
-        }
-
         super.onDraw(canvas);
         if (canvas.isHardwareAccelerated()) {
             onDrawKeyboard(canvas);
