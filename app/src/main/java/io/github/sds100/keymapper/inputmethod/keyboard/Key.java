@@ -89,7 +89,7 @@ public class Key implements Comparable<Key> {
             | LABEL_FLAGS_AUTO_Y_SCALE;
     public static final int LABEL_FLAGS_PRESERVE_CASE = 0x10000;
     private static final int LABEL_FLAGS_SHIFTED_LETTER_ACTIVATED = 0x20000;
-    private static final int LABEL_FLAGS_FROM_CUSTOM_ACTION_LABEL = 0x40000;
+    public static final int LABEL_FLAGS_FROM_CUSTOM_ACTION_LABEL = 0x40000;
     private static final int LABEL_FLAGS_FOLLOW_FUNCTIONAL_TEXT_COLOR = 0x80000;
     private static final int LABEL_FLAGS_KEEP_BACKGROUND_ASPECT_RATIO = 0x100000;
     private static final int LABEL_FLAGS_DISABLE_HINT_LABEL = 0x40000000;
