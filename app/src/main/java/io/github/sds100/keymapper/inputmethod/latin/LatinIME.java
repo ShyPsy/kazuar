@@ -834,6 +834,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             // Remove user history dictionaries.
             PersonalizationHelper.removeAllUserHistoryDictionaries(this);
             mDictionaryFacilitator.clearUserHistoryDictionary(this);
+            if (mInputLogic != null && mInputLogic.mSuggest != null) {
+                mInputLogic.mSuggest.clearPredictionCache();
+            }
         }
     }
 
@@ -884,6 +887,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 false /* forceReloadMainDictionary */,
                 settingsValues.mAccount, "" /* dictNamePrefix */,
                 this /* DictionaryInitializationListener */);
+        if (mInputLogic != null && mInputLogic.mSuggest != null) {
+            mInputLogic.mSuggest.clearPredictionCache();
+        }
         if (settingsValues.mAutoCorrectionEnabledPerUserSettings) {
             mInputLogic.mSuggest.setAutoCorrectionThreshold(
                     settingsValues.mAutoCorrectionThreshold);
@@ -902,6 +908,9 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 true /* forceReloadMainDictionary */,
                 settingsValues.mAccount, "" /* dictNamePrefix */,
                 this /* DictionaryInitializationListener */);
+        if (mInputLogic != null && mInputLogic.mSuggest != null) {
+            mInputLogic.mSuggest.clearPredictionCache();
+        }
     }
 
     @Override

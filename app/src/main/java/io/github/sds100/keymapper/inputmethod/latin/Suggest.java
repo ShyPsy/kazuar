@@ -18,6 +18,7 @@ package io.github.sds100.keymapper.inputmethod.latin;
 
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LruCache;
 
 import io.github.sds100.keymapper.inputmethod.keyboard.Keyboard;
 import io.github.sds100.keymapper.inputmethod.keyboard.KeyboardId;
@@ -38,6 +39,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static io.github.sds100.keymapper.inputmethod.latin.define.DecoderSpecificConstants.SHOULD_AUTO_CORRECT_USING_NON_WHITE_LISTED_SUGGESTION;
 import static io.github.sds100.keymapper.inputmethod.latin.define.DecoderSpecificConstants.SHOULD_REMOVE_PREVIOUSLY_REJECTED_SUGGESTION;
@@ -60,6 +62,28 @@ public final class Suggest {
 
     private static final boolean DBG = DebugFlags.DEBUG_ENABLED;
     private final DictionaryFacilitator mDictionaryFacilitator;
+
+    private static final class PredictionCacheEntry {
+        final ArrayList<SuggestedWordInfo> mSuggestionsList;
+        @Nullable final ArrayList<SuggestedWordInfo> mRawSuggestions;
+        final boolean mIsBeginningOfSentence;
+
+        PredictionCacheEntry(final ArrayList<SuggestedWordInfo> suggestionsList,
+                @Nullable final ArrayList<SuggestedWordInfo> rawSuggestions,
+                final boolean isBeginningOfSentence) {
+            mSuggestionsList = suggestionsList;
+            mRawSuggestions = rawSuggestions;
+            mIsBeginningOfSentence = isBeginningOfSentence;
+        }
+    }
+
+    private static final int PREDICTION_CACHE_MAX_SIZE = 128;
+    private final LruCache<String, PredictionCacheEntry> mPredictionCache =
+            new LruCache<>(PREDICTION_CACHE_MAX_SIZE);
+
+    public void clearPredictionCache() {
+        mPredictionCache.evictAll();
+    }
 
     private static final int MAXIMUM_AUTO_CORRECT_LENGTH_FOR_GERMAN = 12;
     private static final HashMap<String, Integer> sLanguageToMaximumAutoCorrectionWithSpaceLength =
@@ -256,6 +280,33 @@ public final class Suggest {
             final SettingsValuesForSuggestion settingsValuesForSuggestion,
             final int inputStyleIfNotPrediction, final boolean isCorrectionEnabled,
             final int sequenceNumber, final OnGetSuggestedWordsCallback callback) {
+        final boolean resultsArePredictions = !wordComposer.isComposingWord();
+        if (resultsArePredictions && mDictionaryFacilitator.hasAtLeastOneInitializedMainDictionary()) {
+            final Locale locale = mDictionaryFacilitator.getLocale();
+            final String contextStr = ngramContext != null ? ngramContext.extractPrevWordsContext() : "";
+            final String cacheKey = (locale != null ? locale.toLanguageTag() : "") + ":" + contextStr;
+            final PredictionCacheEntry cached = mPredictionCache.get(cacheKey);
+            if (cached != null) {
+                final ArrayList<SuggestedWordInfo> suggestionsList = new ArrayList<>(cached.mSuggestionsList);
+                final ArrayList<SuggestedWordInfo> rawSuggestions = cached.mRawSuggestions != null
+                        ? new ArrayList<>(cached.mRawSuggestions) : null;
+                final SuggestedWordInfo typedWordInfo = new SuggestedWordInfo(
+                        "", "" /* prevWordsContext */, SuggestedWordInfo.MAX_SCORE,
+                        SuggestedWordInfo.KIND_TYPED, Dictionary.DICTIONARY_USER_TYPED,
+                        SuggestedWordInfo.NOT_AN_INDEX, SuggestedWordInfo.NOT_A_CONFIDENCE);
+                final int inputStyle = cached.mIsBeginningOfSentence
+                        ? SuggestedWords.INPUT_STYLE_BEGINNING_OF_SENTENCE_PREDICTION
+                        : SuggestedWords.INPUT_STYLE_PREDICTION;
+                callback.onGetSuggestedWords(new SuggestedWords(
+                        suggestionsList, rawSuggestions, typedWordInfo,
+                        false /* typedWordValid */,
+                        false /* willAutoCorrect */,
+                        false /* isObsoleteSuggestions */,
+                        inputStyle, sequenceNumber));
+                return;
+            }
+        }
+
         final String typedWordString = wordComposer.getTypedWord();
         final int trailingSingleQuotesCount =
                 StringUtils.getTrailingSingleQuotesCount(typedWordString);
@@ -301,7 +352,7 @@ public final class Suggest {
                 getWhitelistedWordInfoOrNull(suggestionsContainer);
         final String whitelistedWord = whitelistedWordInfo == null
                 ? null : whitelistedWordInfo.mWord;
-        final boolean resultsArePredictions = !wordComposer.isComposingWord();
+        // resultsArePredictions was determined at the start of this method
 
         // We allow auto-correction if whitelisting is not required or the word is whitelisted,
         // or if the word had more than one char and was not suggested.
@@ -392,6 +443,17 @@ public final class Suggest {
                     : SuggestedWords.INPUT_STYLE_PREDICTION;
         } else {
             inputStyle = inputStyleIfNotPrediction;
+        }
+
+        if (resultsArePredictions && mDictionaryFacilitator.hasAtLeastOneInitializedMainDictionary()) {
+            final Locale locale = mDictionaryFacilitator.getLocale();
+            final String contextStr = ngramContext != null ? ngramContext.extractPrevWordsContext() : "";
+            final String cacheKey = (locale != null ? locale.toLanguageTag() : "") + ":" + contextStr;
+            mPredictionCache.put(cacheKey, new PredictionCacheEntry(
+                    new ArrayList<>(suggestionsList),
+                    suggestionResults.mRawSuggestions != null
+                            ? new ArrayList<>(suggestionResults.mRawSuggestions) : null,
+                    suggestionResults.mIsBeginningOfSentence));
         }
 
         final boolean isTypedWordValid = firstOcurrenceOfTypedWordInSuggestions > -1

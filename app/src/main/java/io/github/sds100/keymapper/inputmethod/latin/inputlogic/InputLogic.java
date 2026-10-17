@@ -1536,6 +1536,7 @@ public final class InputLogic {
             System.currentTimeMillis());
         mDictionaryFacilitator.unlearnFromUserHistory(
             word, ngramContext, timeStampInSeconds, eventType);
+        mSuggest.clearPredictionCache();
     }
 
     /**
@@ -1786,6 +1787,7 @@ public final class InputLogic {
                 System.currentTimeMillis());
         mDictionaryFacilitator.addToUserHistory(suggestion, wasAutoCapitalized,
                 ngramContext, timeStampInSeconds, settingsValues.mBlockPotentiallyOffensive);
+        mSuggest.clearPredictionCache();
     }
 
     public void performUpdateSuggestionStripSync(final SettingsValues settingsValues,
