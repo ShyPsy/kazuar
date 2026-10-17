@@ -45,7 +45,8 @@
         <Key latin:keySpec="d" latin:keyHintLabel="#" latin:moreKeys="#" />
         <Key latin:keySpec="w" latin:keyHintLabel=":" latin:moreKeys=":" />
         <Key latin:keySpec="z" latin:keyHintLabel="|" latin:moreKeys="|,\\\\" />
-        <Key latin:keySpec="'" latin:keyHintLabel="↷" latin:moreKeys="↷|!code/key_redo" />
+        <Key latin:keySpec="i" latin:keyHintLabel="↷" latin:moreKeys="↷|!code/key_redo" />
+        <Key latin:keyStyle="deleteKeyStyle" latin:keyHintLabel="⬅" latin:moreKeys="⬅|!code/key_delete_word" />
         <Key latin:keySpec="f" latin:keyHintLabel="&amp;" latin:moreKeys="&amp;" />
         <Key latin:keySpec="o" latin:keyHintLabel="+" latin:moreKeys="+,&#x00B1;" />
         <Key latin:keySpec="u" latin:keyHintLabel="[" latin:moreKeys="[,{,«" />
@@ -63,7 +64,7 @@
         <Key latin:keySpec="h" latin:keyHintLabel="." latin:moreKeys="." />
         <Key latin:keySpec="a" latin:keyHintLabel="-" latin:moreKeys="-,&#x2014;,_" />
         <Key latin:keySpec="e" latin:keyHintLabel="=" latin:moreKeys="=,&#x2248;,&#x2260;" />
-        <Key latin:keyStyle="deleteKeyStyle" latin:keyHintLabel="⬅" latin:moreKeys="⬅|!code/key_delete_word" />
+        <Key latin:keySpec="i" latin:keyHintLabel="↷" latin:moreKeys="↷|!code/key_redo" />
     </Row>
 
     <!-- Row 4: Z-V, Space (3 units), B-M (slash removed) -->
