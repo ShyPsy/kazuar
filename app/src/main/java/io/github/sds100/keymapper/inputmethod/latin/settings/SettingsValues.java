@@ -297,20 +297,11 @@ public class SettingsValues {
         final String lang = mLocale != null && mLocale.getLanguage() != null ? mLocale.getLanguage() : "";
         final String layoutVersion = prefs.getString("pref_keyboard_layout_" + lang, "v3");
         final String rulesJson = prefs.getString("pref_custom_double_tap_rules_" + lang + "_" + layoutVersion, "ru".equals(lang) ? DEFAULT_RULES_JSON : "[]");
-        mCustomDoubleTapRules = parseDoubleTapRules(rulesJson);
-        mCustomDoubleTapRulesMap = new HashMap<>();
-        mCustomDoubleTapRulesByCodePoint = new SparseArray<>();
-        if (mCustomDoubleTapRules != null) {
-            for (DoubleTapRule rule : mCustomDoubleTapRules) {
-                if (rule != null && rule.enabled && rule.key != null && rule.replacement != null) {
-                    final String lowerKey = rule.key.toLowerCase(Locale.ROOT);
-                    mCustomDoubleTapRulesMap.put(lowerKey, rule.replacement);
-                    if (!lowerKey.isEmpty()) {
-                        mCustomDoubleTapRulesByCodePoint.put(lowerKey.codePointAt(0), rule.replacement);
-                    }
-                }
-            }
-        }
+        final String cacheKey = lang + "_" + layoutVersion;
+        final ParsedDoubleTapData dtData = getParsedDoubleTapData(cacheKey, rulesJson);
+        mCustomDoubleTapRules = dtData.rules;
+        mCustomDoubleTapRulesMap = dtData.rulesMap;
+        mCustomDoubleTapRulesByCodePoint = dtData.rulesByCodePoint;
 
         mSwipeThreshold = parseIntPref(prefs, "pref_swipe_threshold", 40) / 100.0f;
         mSwipeUpAction = parseIntPref(prefs, "pref_swipe_up_action", -21);
@@ -627,5 +618,45 @@ public class SettingsValues {
             Log.e(TAG, "Failed to serialize double tap rules", e);
             return "[]";
         }
+    }
+
+    private static class ParsedDoubleTapData {
+        final ArrayList<DoubleTapRule> rules;
+        final HashMap<String, String> rulesMap;
+        final SparseArray<String> rulesByCodePoint;
+        final String json;
+
+        ParsedDoubleTapData(ArrayList<DoubleTapRule> rules, HashMap<String, String> rulesMap, SparseArray<String> rulesByCodePoint, String json) {
+            this.rules = rules;
+            this.rulesMap = rulesMap;
+            this.rulesByCodePoint = rulesByCodePoint;
+            this.json = json;
+        }
+    }
+
+    private static final HashMap<String, ParsedDoubleTapData> sDoubleTapRulesCache = new HashMap<>();
+
+    private static synchronized ParsedDoubleTapData getParsedDoubleTapData(final String cacheKey, final String rulesJson) {
+        final ParsedDoubleTapData cached = sDoubleTapRulesCache.get(cacheKey);
+        if (cached != null && cached.json.equals(rulesJson)) {
+            return cached;
+        }
+        final ArrayList<DoubleTapRule> rules = parseDoubleTapRules(rulesJson);
+        final HashMap<String, String> rulesMap = new HashMap<>();
+        final SparseArray<String> rulesByCodePoint = new SparseArray<>();
+        if (rules != null) {
+            for (DoubleTapRule rule : rules) {
+                if (rule != null && rule.enabled && rule.key != null && rule.replacement != null) {
+                    final String lowerKey = rule.key.toLowerCase(Locale.ROOT);
+                    rulesMap.put(lowerKey, rule.replacement);
+                    if (!lowerKey.isEmpty()) {
+                        rulesByCodePoint.put(lowerKey.codePointAt(0), rule.replacement);
+                    }
+                }
+            }
+        }
+        final ParsedDoubleTapData data = new ParsedDoubleTapData(rules, rulesMap, rulesByCodePoint, rulesJson);
+        sDoubleTapRulesCache.put(cacheKey, data);
+        return data;
     }
 }

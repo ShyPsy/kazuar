@@ -79,10 +79,9 @@ public final class KeyboardLayoutSet {
     @Nonnull
     private final Params mParams;
 
-    // How many layouts we forcibly keep in cache. This only includes ALPHABET (default) and
-    // ALPHABET_AUTOMATIC_SHIFTED layouts - other layouts may stay in memory in the map of
-    // soft-references, but we forcibly cache this many alphabetic/auto-shifted layouts.
-    private static final int FORCIBLE_CACHE_SIZE = 4;
+    // How many layouts we forcibly keep in cache so switching between active
+    // layouts (alphabet, symbols, editing, num, user layouts) is instantaneous and not evicted by GC.
+    private static final int FORCIBLE_CACHE_SIZE = 12;
     // By construction of soft references, anything that is also referenced somewhere else
     // will stay in the cache. So we forcibly keep some references in an array to prevent
     // them from disappearing from sKeyboardCache.
@@ -259,8 +258,8 @@ public final class KeyboardLayoutSet {
         if (id.mElementId == KeyboardId.ELEMENT_EDITING) {
             final String layoutEditingVersion = prefs.getString("pref_keyboard_layout_editing", "default");
             final String customXml = prefs.getString("pref_custom_layout_editing", null);
-            builder.load(R.xml.kbd_editing, id);
             if ("custom".equals(layoutEditingVersion) && customXml != null && !customXml.trim().isEmpty()) {
+                builder.loadHeaderOnly(R.xml.kbd_editing, id);
                 final KeyboardParams kbParams = builder.getParams();
                 if (io.github.sds100.keymapper.inputmethod.keyboard.internal.CustomLayoutLoader.tryLoadCustomLayoutFromString(mContext, kbParams, customXml)) {
                     loadedCustom = true;
@@ -270,6 +269,7 @@ public final class KeyboardLayoutSet {
                     loadedCustom = true;
                 }
             } else {
+                builder.load(R.xml.kbd_editing, id);
                 loadedCustom = true;
             }
         } else if (id.mElementId == KeyboardId.ELEMENT_USER_0
@@ -285,8 +285,8 @@ public final class KeyboardLayoutSet {
             }
             final String layoutUserVersion = prefs.getString("pref_keyboard_layout_" + userKey, "empty");
             final String customXml = prefs.getString("pref_custom_layout_" + userKey, null);
-            builder.load(R.xml.kbd_user_empty, id);
             if ("custom".equals(layoutUserVersion) && customXml != null && !customXml.trim().isEmpty()) {
+                builder.loadHeaderOnly(R.xml.kbd_user_empty, id);
                 final KeyboardParams kbParams = builder.getParams();
                 if (io.github.sds100.keymapper.inputmethod.keyboard.internal.CustomLayoutLoader.tryLoadCustomLayoutFromString(mContext, kbParams, customXml)) {
                     loadedCustom = true;
@@ -296,13 +296,14 @@ public final class KeyboardLayoutSet {
                     loadedCustom = true;
                 }
             } else {
+                builder.load(R.xml.kbd_user_empty, id);
                 loadedCustom = true;
             }
         } else if (id.mElementId == KeyboardId.ELEMENT_NUMBER) {
             final String layoutNumVersion = prefs.getString("pref_keyboard_layout_num", "default");
             final String customXml = prefs.getString("pref_custom_layout_num", null);
             if ("custom".equals(layoutNumVersion) && customXml != null && !customXml.trim().isEmpty()) {
-                builder.load(R.xml.kbd_number, id);
+                builder.loadHeaderOnly(R.xml.kbd_number, id);
                 final KeyboardParams kbParams = builder.getParams();
                 if (io.github.sds100.keymapper.inputmethod.keyboard.internal.CustomLayoutLoader.tryLoadCustomLayoutFromString(mContext, kbParams, customXml)) {
                     loadedCustom = true;
@@ -315,13 +316,14 @@ public final class KeyboardLayoutSet {
         } else if ("custom".equals(layoutVersion) && id.isAlphabetKeyboard()) {
             final String customXml = prefs.getString("pref_custom_layout_" + language, null);
             if (customXml != null && !customXml.trim().isEmpty()) {
-                builder.load(elementParams.mKeyboardXmlId, id);
+                builder.loadHeaderOnly(elementParams.mKeyboardXmlId, id);
                 final KeyboardParams kbParams = builder.getParams();
                 if (io.github.sds100.keymapper.inputmethod.keyboard.internal.CustomLayoutLoader.tryLoadCustomLayoutFromString(mContext, kbParams, customXml)) {
                     loadedCustom = true;
                 } else {
                     kbParams.clearKeys();
                     builder.load(elementParams.mKeyboardXmlId, id);
+                    loadedCustom = true;
                 }
             }
         }
@@ -339,10 +341,9 @@ public final class KeyboardLayoutSet {
         builder.setProximityCharsCorrectionEnabled(elementParams.mProximityCharsCorrectionEnabled);
         final Keyboard keyboard = builder.build();
         sKeyboardCache.put(id, new SoftReference<>(keyboard));
-        if ((id.mElementId == KeyboardId.ELEMENT_ALPHABET
-                || id.mElementId == KeyboardId.ELEMENT_ALPHABET_AUTOMATIC_SHIFTED)
-                && !mParams.mIsSpellChecker) {
-            // We only forcibly cache the primary, "ALPHABET", layouts.
+        if (!mParams.mIsSpellChecker) {
+            // Forcibly cache all active and recently used layouts so switching
+            // between them is instantaneous and never evicted by GC.
             for (int i = sForcibleKeyboardCache.length - 1; i >= 1; --i) {
                 sForcibleKeyboardCache[i] = sForcibleKeyboardCache[i - 1];
             }
@@ -513,10 +514,18 @@ public final class KeyboardLayoutSet {
             return new KeyboardLayoutSet(mContext, mParams);
         }
 
+        private static final HashMap<String, Integer> sXmlIdCache = new HashMap<>();
+
         private static int getXmlId(final Resources resources, final String keyboardLayoutSetName) {
+            final Integer cached = sXmlIdCache.get(keyboardLayoutSetName);
+            if (cached != null) {
+                return cached;
+            }
             final String packageName = resources.getResourcePackageName(
                     R.xml.keyboard_layout_set_qwerty);
-            return resources.getIdentifier(keyboardLayoutSetName, "xml", packageName);
+            final int id = resources.getIdentifier(keyboardLayoutSetName, "xml", packageName);
+            sXmlIdCache.put(keyboardLayoutSetName, id);
+            return id;
         }
 
         private void parseKeyboardLayoutSet(final Resources res, final int resId)

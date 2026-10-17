@@ -915,6 +915,9 @@ public class CustomLayoutLoader {
             return "\\,";
         }
 
+        if (!trimmed.contains("\\\\")) {
+            return trimmed;
+        }
         return trimmed
                 .replace("\\\\,", "\\,")
                 .replace("\\\\%", "\\%")

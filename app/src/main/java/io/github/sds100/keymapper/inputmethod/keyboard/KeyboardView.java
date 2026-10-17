@@ -524,6 +524,8 @@ public class KeyboardView extends View {
             final int primaryCode = key.getCode();
             if (primaryCode > 0 && mCustomDoubleTapRulesByCodePoint != null) {
                 doubleTapReplacement = mCustomDoubleTapRulesByCodePoint.get(Character.toLowerCase(primaryCode));
+            } else if (label.length() == 1 && mCustomDoubleTapRulesByCodePoint != null) {
+                doubleTapReplacement = mCustomDoubleTapRulesByCodePoint.get(Character.toLowerCase(label.charAt(0)));
             } else if (mCustomDoubleTapRulesMap != null) {
                 doubleTapReplacement = mCustomDoubleTapRulesMap.get(label.toLowerCase(java.util.Locale.ROOT));
             }

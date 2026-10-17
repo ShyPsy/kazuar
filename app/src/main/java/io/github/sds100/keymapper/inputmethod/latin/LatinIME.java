@@ -741,10 +741,8 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         mClipboardHistoryManager.onCreate();
         mHandler.onCreate();
 
-        // TODO: Resolve mutual dependencies of {@link #loadSettings()} and
-        // {@link #resetDictionaryFacilitatorIfNecessary()}.
+        // loadSettings() internally invokes resetDictionaryFacilitatorIfNecessary()
         loadSettings();
-        resetDictionaryFacilitatorIfNecessary();
 
         // Register to receive ringer mode change.
         final IntentFilter filter = new IntentFilter();
@@ -773,31 +771,36 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
         ContextCompat.registerReceiver(this, mKeyMapperBroadcastReceiver, keyMapperIntentFilter, ContextCompat.RECEIVER_EXPORTED);
 
-        // Connect to the different key mapper build types.
-        mKeyEventRelayServiceWrapperRelease =
-                new KeyEventRelayServiceWrapperImpl(
-                        getApplicationContext(),
-                        "io.github.sds100.keymapper",
-                        "input_method",
-                        mKeyEventRelayServiceCallback);
-        mKeyEventRelayServiceWrapperRelease.onCreate();
+        // Connect to the different key mapper build types asynchronously in background to avoid blocking onCreate.
+        final Context appContext = getApplicationContext();
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                mKeyEventRelayServiceWrapperRelease =
+                        new KeyEventRelayServiceWrapperImpl(
+                                appContext,
+                                "io.github.sds100.keymapper",
+                                "input_method",
+                                mKeyEventRelayServiceCallback);
+                mKeyEventRelayServiceWrapperRelease.onCreate();
 
-        mKeyEventRelayServiceWrapperDebug =
-                new KeyEventRelayServiceWrapperImpl(
-                        getApplicationContext(),
-                        "io.github.sds100.keymapper.debug",
-                        "input_method",
-                        mKeyEventRelayServiceCallback);
-        mKeyEventRelayServiceWrapperDebug.onCreate();
+                mKeyEventRelayServiceWrapperDebug =
+                        new KeyEventRelayServiceWrapperImpl(
+                                appContext,
+                                "io.github.sds100.keymapper.debug",
+                                "input_method",
+                                mKeyEventRelayServiceCallback);
+                mKeyEventRelayServiceWrapperDebug.onCreate();
 
-        mKeyEventRelayServiceWrapperCi =
-                new KeyEventRelayServiceWrapperImpl(
-                        getApplicationContext(),
-                        "io.github.sds100.keymapper.ci",
-                        "input_method",
-                        mKeyEventRelayServiceCallback);
-        mKeyEventRelayServiceWrapperCi.onCreate();
-
+                mKeyEventRelayServiceWrapperCi =
+                        new KeyEventRelayServiceWrapperImpl(
+                                appContext,
+                                "io.github.sds100.keymapper.ci",
+                                "input_method",
+                                mKeyEventRelayServiceCallback);
+                mKeyEventRelayServiceWrapperCi.onCreate();
+            }
+        });
     }
 
     // Has to be package-visible for unit tests
@@ -911,12 +914,18 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         unregisterReceiver(mDictionaryDumpBroadcastReceiver);
         unregisterReceiver(mRestartAfterDeviceUnlockReceiver);
         unregisterReceiver(mKeyMapperBroadcastReceiver);
-        mKeyEventRelayServiceWrapperRelease.onDestroy();
-        mKeyEventRelayServiceWrapperRelease = null;
-        mKeyEventRelayServiceWrapperDebug.onDestroy();
-        mKeyEventRelayServiceWrapperDebug = null;
-        mKeyEventRelayServiceWrapperCi.onDestroy();
-        mKeyEventRelayServiceWrapperCi = null;
+        if (mKeyEventRelayServiceWrapperRelease != null) {
+            mKeyEventRelayServiceWrapperRelease.onDestroy();
+            mKeyEventRelayServiceWrapperRelease = null;
+        }
+        if (mKeyEventRelayServiceWrapperDebug != null) {
+            mKeyEventRelayServiceWrapperDebug.onDestroy();
+            mKeyEventRelayServiceWrapperDebug = null;
+        }
+        if (mKeyEventRelayServiceWrapperCi != null) {
+            mKeyEventRelayServiceWrapperCi.onDestroy();
+            mKeyEventRelayServiceWrapperCi = null;
+        }
         super.onDestroy();
     }
 

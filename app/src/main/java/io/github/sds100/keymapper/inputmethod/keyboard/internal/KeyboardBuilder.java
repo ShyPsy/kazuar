@@ -187,6 +187,34 @@ public class KeyboardBuilder<KP extends KeyboardParams> {
         return this;
     }
 
+    public KeyboardBuilder<KP> loadHeaderOnly(final int xmlId, final KeyboardId id) {
+        mParams.mId = id;
+        final XmlResourceParser parser = mResources.getXml(xmlId);
+        try {
+            while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
+                final int event = parser.next();
+                if (event == XmlPullParser.START_TAG) {
+                    final String tag = parser.getName();
+                    if (TAG_KEYBOARD.equals(tag)) {
+                        parseKeyboardAttributes(parser);
+                        startKeyboard();
+                        return this;
+                    }
+                    throw new XmlParseUtils.IllegalStartTag(parser, tag, TAG_KEYBOARD);
+                }
+            }
+        } catch (XmlPullParserException e) {
+            Log.w(BUILDER_TAG, "keyboard XML parse error", e);
+            throw new IllegalArgumentException(e.getMessage(), e);
+        } catch (IOException e) {
+            Log.w(BUILDER_TAG, "keyboard XML parse error", e);
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            parser.close();
+        }
+        return this;
+    }
+
     @UsedForTesting
     public void disableTouchPositionCorrectionDataForTest() {
         mParams.mTouchPositionCorrection.setEnabled(false);
