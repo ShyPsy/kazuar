@@ -446,7 +446,6 @@ public final class Suggest {
         }
 
         if (resultsArePredictions && mDictionaryFacilitator.hasAtLeastOneInitializedMainDictionary()) {
-            final Locale locale = mDictionaryFacilitator.getLocale();
             final String contextStr = ngramContext != null ? ngramContext.extractPrevWordsContext() : "";
             final String cacheKey = (locale != null ? locale.toLanguageTag() : "") + ":" + contextStr;
             mPredictionCache.put(cacheKey, new PredictionCacheEntry(
