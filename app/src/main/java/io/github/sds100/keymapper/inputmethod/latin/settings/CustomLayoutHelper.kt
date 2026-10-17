@@ -71,6 +71,7 @@ object CustomLayoutHelper {
                             if (attrName == "layer" || attrName == "target") {
                                 target = when {
                                     attrVal in listOf("editing", "edit", "arrows", "arrow") -> "editing"
+                                    attrVal in listOf("num", "numpad", "number", "numbers", "pin", "numeric") -> "num"
                                     attrVal in listOf("usr0", "user0", "user_0", "user-0") -> "usr0"
                                     attrVal in listOf("usr1", "user1", "user_1", "user-1") -> "usr1"
                                     attrVal in listOf("usr2", "user2", "user_2", "user-2") -> "usr2"
@@ -82,6 +83,7 @@ object CustomLayoutHelper {
                             } else if (attrName == "language" || attrName == "locale") {
                                 target = when {
                                     attrVal in listOf("editing", "edit") -> "editing"
+                                    attrVal in listOf("num", "numpad", "number", "pin") -> "num"
                                     attrVal in listOf("usr0", "user0", "user_0", "user-0") -> "usr0"
                                     attrVal in listOf("usr1", "user1", "user_1", "user-1") -> "usr1"
                                     attrVal in listOf("usr2", "user2", "user_2", "user-2") -> "usr2"
@@ -118,6 +120,7 @@ object CustomLayoutHelper {
             target = when {
                 fileName.contains("editing") || fileName.contains("edit") || fileName.contains("arrow")
                         || fileName.contains("стрелк") || fileName.contains("редактир") -> "editing"
+                fileName.contains("num") || fileName.contains("pin") || fileName.contains("цифр") -> "num"
                 fileName.contains("usr0") || fileName.contains("user0") || fileName.contains("user_0") || fileName.contains("user-0") -> "usr0"
                 fileName.contains("usr1") || fileName.contains("user1") || fileName.contains("user_1") || fileName.contains("user-1") -> "usr1"
                 fileName.contains("usr2") || fileName.contains("user2") || fileName.contains("user_2") || fileName.contains("user-2") -> "usr2"
@@ -135,7 +138,7 @@ object CustomLayoutHelper {
                 Toast.makeText(context, context.getString(R.string.toast_file_load_failed, e.message), Toast.LENGTH_LONG).show()
             }
         } else {
-            val targets = arrayOf("ru", "en", "editing", "usr0", "usr1", "usr2")
+            val targets = arrayOf("ru", "en", "editing", "num", "usr0", "usr1", "usr2")
             val options = targets.map { getTargetDisplayName(context, it) }.toTypedArray()
             AlertDialog.Builder(context)
                 .setTitle(R.string.dialog_select_layout_target)
@@ -242,6 +245,7 @@ object CustomLayoutHelper {
             "ru" -> context.getString(R.string.language_russian)
             "en" -> context.getString(R.string.language_english)
             "editing" -> context.getString(R.string.pref_keyboard_layout_editing_title)
+            "num" -> context.getString(R.string.pref_keyboard_layout_num_title)
             "usr0" -> context.getString(R.string.pref_keyboard_layout_usr0_title)
             "usr1" -> context.getString(R.string.pref_keyboard_layout_usr1_title)
             "usr2" -> context.getString(R.string.pref_keyboard_layout_usr2_title)

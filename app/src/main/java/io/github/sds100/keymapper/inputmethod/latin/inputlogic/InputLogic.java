@@ -824,6 +824,17 @@ public final class InputLogic {
                     switcherToUsr.setUserKeyboard(userIndex);
                 }
                 break;
+            case Constants.CODE_SWITCH_TO_NUM:
+                final KeyboardSwitcher switcherToNum = KeyboardSwitcher.getInstance();
+                if (switcherToNum.isShowingKeyboardId(KeyboardId.ELEMENT_NUMBER)) {
+                    switcherToNum.setAlphabetKeyboard();
+                    switcherToNum.resetKeyboardStateToAlphabet(
+                            getCurrentAutoCapsState(inputTransaction.getMSettingsValues()),
+                            getCurrentRecapitalizeState());
+                } else {
+                    switcherToNum.setNumberKeyboard();
+                }
+                break;
             case Constants.CODE_SELECT_TOGGLE:
                 mSelectToggled = !mSelectToggled;
                 final KeyboardSwitcher switcherToggle = KeyboardSwitcher.getInstance();

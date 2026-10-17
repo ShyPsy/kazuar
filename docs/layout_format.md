@@ -20,12 +20,15 @@ Custom keyboard layouts use the XML format parsed by [CustomLayoutLoader.java](.
 > - **Symbols V4**: [`rows_symbols_v4.xml`](../app/src/main/res/xml/rows_symbols_v4.xml)
 > - **Symbols V3**: [`rows_symbols_v3.xml`](../app/src/main/res/xml/rows_symbols_v3.xml)
 > - **Editing / Navigation Layout**: [`rows_editing.xml`](../app/src/main/res/xml/rows_editing.xml)
+> - **num (Password)**: [`rows_number_password.xml`](../app/src/main/res/xml/rows_number_password.xml)
+> - **num (Normal)**: [`rows_number_normal.xml`](../app/src/main/res/xml/rows_number_normal.xml)
 > - **Empty User Layout Fallback**: [`kbd_user_empty.xml`](../app/src/main/res/xml/kbd_user_empty.xml)
 
 ## Root Attributes
 
 - **`layer` / `target`**: Defines the target layout:
   - `editing` (or `edit`, `arrows`): Editing and navigation layout
+  - `num` (or `pin`, `number`, `numpad`): num layout
   - `usr0` (or `user0`): Custom User Layout 1
   - `usr1` (or `user1`): Custom User Layout 2
   - `usr2` (or `user2`): Custom User Layout 3
@@ -250,6 +253,7 @@ Functional keycodes can be assigned to the `codes` or `longCode` attributes of a
 | **Switch Usr1**     | `-344`       | Toggle custom user layout 1 (`!code/key_switch_to_usr1`) |
 | **Switch Usr2**     | `-345`       | Toggle custom user layout 2 (`!code/key_switch_to_usr2`) |
 | **Switch to ABC**   | `-346`       | Unconditional return to alphabet layout (`!code/key_switch_to_abc`) |
+| **Switch to num**   | `-347`       | Toggle num layout (`!code/key_switch_to_num`) |
 | **Arrow Left**      | `-501`       | Move cursor left (`!code/key_arrow_left`)          |
 | **Arrow Right**     | `-502`       | Move cursor right                                  |
 | **Arrow Up**        | `-503`       | Move cursor up                                     |

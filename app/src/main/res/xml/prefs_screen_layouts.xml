@@ -57,6 +57,13 @@
             android:defaultValue="default" />
 
         <ListPreference
+            android:key="pref_keyboard_layout_num"
+            android:title="@string/pref_keyboard_layout_num_title"
+            android:entries="@array/layout_editing_choices_names"
+            android:entryValues="@array/layout_editing_choices_values"
+            android:defaultValue="default" />
+
+        <ListPreference
             android:key="pref_keyboard_layout_usr0"
             android:title="@string/pref_keyboard_layout_usr0_title"
             android:entries="@array/layout_user_layer_choices_names"

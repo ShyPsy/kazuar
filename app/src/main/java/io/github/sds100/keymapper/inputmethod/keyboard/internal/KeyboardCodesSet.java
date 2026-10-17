@@ -81,7 +81,8 @@ public final class KeyboardCodesSet {
         "key_switch_to_usr0",
         "key_switch_to_usr1",
         "key_switch_to_usr2",
-        "key_switch_to_abc"
+        "key_switch_to_abc",
+        "key_switch_to_num"
     };
 
     private static final int[] DEFAULT = {
@@ -130,7 +131,8 @@ public final class KeyboardCodesSet {
         Constants.CODE_SWITCH_TO_USR0,
         Constants.CODE_SWITCH_TO_USR1,
         Constants.CODE_SWITCH_TO_USR2,
-        Constants.CODE_SWITCH_TO_ABC
+        Constants.CODE_SWITCH_TO_ABC,
+        Constants.CODE_SWITCH_TO_NUM
     };
 
     private static void registerAlias(final String alias, final String target) {
@@ -156,5 +158,10 @@ public final class KeyboardCodesSet {
         registerAlias("switch_to_user1", "key_switch_to_usr1");
         registerAlias("switch_to_user2", "key_switch_to_usr2");
         registerAlias("switch_to_abc", "key_switch_to_abc");
+        registerAlias("switch_to_num", "key_switch_to_num");
+        registerAlias("switch_to_numpad", "key_switch_to_num");
+        registerAlias("switch_to_pin", "key_switch_to_num");
+        registerAlias("key_switch_to_numpad", "key_switch_to_num");
+        registerAlias("key_switch_to_pin", "key_switch_to_num");
     }
 }

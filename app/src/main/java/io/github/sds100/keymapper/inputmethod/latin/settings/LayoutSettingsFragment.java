@@ -101,6 +101,7 @@ public final class LayoutSettingsFragment extends SubScreenFragment {
         setupLayoutListPreference("pref_keyboard_layout_ru", "v3");
         setupLayoutListPreference("pref_keyboard_layout_en", "v3");
         setupLayoutListPreference("pref_keyboard_layout_editing", "default");
+        setupLayoutListPreference("pref_keyboard_layout_num", "default");
         setupLayoutListPreference("pref_keyboard_layout_usr0", "empty");
         setupLayoutListPreference("pref_keyboard_layout_usr1", "empty");
         setupLayoutListPreference("pref_keyboard_layout_usr2", "empty");
@@ -145,6 +146,7 @@ public final class LayoutSettingsFragment extends SubScreenFragment {
         updateLayoutPicker("pref_keyboard_layout_ru", "v3");
         updateLayoutPicker("pref_keyboard_layout_en", "v3");
         updateLayoutPicker("pref_keyboard_layout_editing", "default");
+        updateLayoutPicker("pref_keyboard_layout_num", "default");
         updateLayoutPicker("pref_keyboard_layout_usr0", "empty");
         updateLayoutPicker("pref_keyboard_layout_usr1", "empty");
         updateLayoutPicker("pref_keyboard_layout_usr2", "empty");

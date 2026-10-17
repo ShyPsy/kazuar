@@ -270,6 +270,7 @@ public final class Constants {
     public static final int CODE_SWITCH_TO_USR1 = -344;
     public static final int CODE_SWITCH_TO_USR2 = -345;
     public static final int CODE_SWITCH_TO_ABC = -346;
+    public static final int CODE_SWITCH_TO_NUM = -347;
     public static final int CODE_ARROW_LEFT = -501;
     public static final int CODE_ARROW_RIGHT = -502;
     public static final int CODE_ARROW_UP = -503;
@@ -315,6 +316,7 @@ public final class Constants {
         case CODE_SWITCH_TO_USR1: return "switchUsr1";
         case CODE_SWITCH_TO_USR2: return "switchUsr2";
         case CODE_SWITCH_TO_ABC: return "switchAbc";
+        case CODE_SWITCH_TO_NUM: return "switchNum";
         default:
             if (code < CODE_SPACE) return String.format("\\u%02X", code);
             if (code < 0x100) return String.format("%c", code);

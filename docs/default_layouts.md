@@ -223,3 +223,12 @@ Kazuar supports up to 3 customizable user layers (`usr0`, `usr1`, `usr2`), empty
 - **Direct Switch**: Pressing another layer's switch key (e.g. going from `usr0` to `usr1` or to `edit`) switches directly to that target layer.
 - **Return to Alphabet**: Pressing `!code/key_switch_to_abc` (code `-346`) or standard symbol switch (`?123`) from any editing or user layer immediately returns to the alphabet layout.
 - **Empty Fallback**: If a user layer is empty / not loaded, it opens [`kbd_user_empty.xml`](../app/src/main/res/xml/kbd_user_empty.xml) containing an "ABC" key to safely return to the alphabet layout.
+
+# num
+
+Kazuar includes a dedicated numeric and PIN keypad layout used automatically for numeric input fields (`inputType="numberPassword"` / `inputType="number"`), and also callable on demand from any layout via `!code/key_switch_to_num` (code `-347`):
+- **Built-in PIN Layout**: [`rows_number_password.xml`](../app/src/main/res/xml/rows_number_password.xml) (3x4 PIN keypad).
+- **Built-in Normal Numeric Layout**: [`rows_number_normal.xml`](../app/src/main/res/xml/rows_number_normal.xml) (4x4 calculator keypad).
+- **Customization**: Can be replaced with a custom XML layout (`layer="num"` or `target="num"` in root tag) and loaded via settings under **Layouts -> num**.
+- **Toggle**: Pressing `!code/key_switch_to_num` switches to the numeric layout. Pressing the same switch key again returns to the previous alphabet layout.
+

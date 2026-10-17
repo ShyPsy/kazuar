@@ -20,12 +20,15 @@
 > - **Символы V4**: [`rows_symbols_v4.xml`](../app/src/main/res/xml/rows_symbols_v4.xml)
 > - **Символы V3**: [`rows_symbols_v3.xml`](../app/src/main/res/xml/rows_symbols_v3.xml)
 > - **Раскладка редактирования и стрелок**: [`rows_editing.xml`](../app/src/main/res/xml/rows_editing.xml)
+> - **num (пароль)**: [`rows_number_password.xml`](../app/src/main/res/xml/rows_number_password.xml)
+> - **num (обычная)**: [`rows_number_normal.xml`](../app/src/main/res/xml/rows_number_normal.xml)
 > - **Шаблон пустой пользовательской раскладки**: [`kbd_user_empty.xml`](../app/src/main/res/xml/kbd_user_empty.xml)
 
 ## Корневые атрибуты
 
 - **`layer` / `target`**: Задает целевую раскладку:
   - `editing` (или `edit`, `arrows`): Раскладка редактирования и навигации
+  - `num` (или `pin`, `number`, `numpad`): Раскладка num
   - `usr0` (или `user0`): Пользовательская раскладка 1
   - `usr1` (или `user1`): Пользовательская раскладка 2
   - `usr2` (или `user2`): Пользовательская раскладка 3
@@ -233,6 +236,7 @@
 | **Switch Usr1** | `-344` | Переключить пользовательскую раскладку 1 (`!code/key_switch_to_usr1`) |
 | **Switch Usr2** | `-345` | Переключить пользовательскую раскладку 2 (`!code/key_switch_to_usr2`) |
 | **Switch to ABC** | `-346` | Возврат к алфавитной раскладке (`!code/key_switch_to_abc`) |
+| **Switch to num** | `-347` | Переключить раскладку num (`!code/key_switch_to_num`) |
 | **Arrow Left** | `-501` | Курсор влево (`!code/key_arrow_left`) |
 | **Arrow Right** | `-502` | Курсор вправо |
 | **Arrow Up** | `-503` | Курсор вверх |

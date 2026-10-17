@@ -200,6 +200,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             if (PREF_KEYBOARD_LAYOUT_RU.equals(key) || PREF_KEYBOARD_LAYOUT_EN.equals(key)
                     || "pref_custom_layout_ru".equals(key) || "pref_custom_layout_en".equals(key)
                     || "pref_keyboard_layout_editing".equals(key) || "pref_custom_layout_editing".equals(key)
+                    || "pref_keyboard_layout_num".equals(key) || "pref_custom_layout_num".equals(key)
                     || "pref_keyboard_layout_usr0".equals(key) || "pref_custom_layout_usr0".equals(key)
                     || "pref_keyboard_layout_usr1".equals(key) || "pref_custom_layout_usr1".equals(key)
                     || "pref_keyboard_layout_usr2".equals(key) || "pref_custom_layout_usr2".equals(key)) {

@@ -406,6 +406,8 @@ public class CustomLayoutLoader {
                             label = "USR1";
                         } else if (code == Constants.CODE_SWITCH_TO_USR2) {
                             label = "USR2";
+                        } else if (code == Constants.CODE_SWITCH_TO_NUM) {
+                            label = "123";
                         }
                     }
 
@@ -433,6 +435,7 @@ public class CustomLayoutLoader {
                                 || code == Constants.CODE_CAPSLOCK || code == Constants.CODE_SWITCH_TO_EDITING
                                 || code == Constants.CODE_SWITCH_TO_USR0 || code == Constants.CODE_SWITCH_TO_USR1
                                 || code == Constants.CODE_SWITCH_TO_USR2 || code == Constants.CODE_SWITCH_TO_ABC
+                                || code == Constants.CODE_SWITCH_TO_NUM
                                 || iconId != KeyboardIconsSet.ICON_UNDEFINED) {
                             backgroundType = Key.BACKGROUND_TYPE_FUNCTIONAL;
                         }
@@ -610,6 +613,16 @@ public class CustomLayoutLoader {
             case "switch_to_abc":
             case "key_switch_to_abc":
                 return Constants.CODE_SWITCH_TO_ABC;
+            case "switch_to_num":
+            case "key_switch_to_num":
+            case "switch_to_numpad":
+            case "key_switch_to_numpad":
+            case "switch_to_pin":
+            case "key_switch_to_pin":
+            case "num":
+            case "numpad":
+            case "pin":
+                return Constants.CODE_SWITCH_TO_NUM;
             case "arrow_left":
             case "key_arrow_left":
                 return Constants.CODE_ARROW_LEFT;

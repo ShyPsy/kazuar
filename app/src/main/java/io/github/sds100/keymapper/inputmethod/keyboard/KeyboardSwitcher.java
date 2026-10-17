@@ -316,6 +316,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         setKeyboard(elementId, switchState);
     }
 
+    public void setNumberKeyboard() {
+        if (DEBUG_ACTION) {
+            Log.d(TAG, "setNumberKeyboard");
+        }
+        setKeyboard(KeyboardId.ELEMENT_NUMBER, KeyboardSwitchState.NUMBER);
+    }
+
     public boolean isImeSuppressedByHardwareKeyboard(
             @Nonnull final SettingsValues settingsValues,
             @Nonnull final KeyboardSwitchState toggleState) {
@@ -384,6 +391,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         USER_0(KeyboardId.ELEMENT_USER_0),
         USER_1(KeyboardId.ELEMENT_USER_1),
         USER_2(KeyboardId.ELEMENT_USER_2),
+        NUMBER(KeyboardId.ELEMENT_NUMBER),
         OTHER(-1);
 
         final int mKeyboardId;
@@ -412,6 +420,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             return KeyboardSwitchState.USER_1;
         } else if (isShowingKeyboardId(KeyboardId.ELEMENT_USER_2)) {
             return KeyboardSwitchState.USER_2;
+        } else if (isShowingKeyboardId(KeyboardId.ELEMENT_NUMBER)) {
+            return KeyboardSwitchState.NUMBER;
         } else if (isShowingKeyboardId(KeyboardId.ELEMENT_SYMBOLS_SHIFTED)) {
             return KeyboardSwitchState.SYMBOLS_SHIFTED;
         }
