@@ -128,6 +128,29 @@ Double-tap rules automatically preserve and adapt to letter casing:
 
 ---
 
+## Layout Geometry & Limits (Rows and Columns)
+
+### Number of Rows
+- **No hard-coded limit**: You can create layouts with 3, 4, 5, 6, or more rows (`<Row>`).
+- **Dynamic height calculation**: The total usable keyboard height (`baseHeight`) is divided equally among all rows in the layout:
+  $$\text{rowHeight} = \frac{\text{baseHeight}}{\text{totalRows}}$$
+- **Ergonomic considerations**: While you can technically add as many rows as you want, having 6 or 7 rows will reduce the height of each key proportionally to fit within the keyboard boundaries.
+
+### Number of Columns (Keys per Row)
+- **No fixed column limit**: A row can contain any number of keys (`<Key>`) and spacers (`<Spacer>`). Keys are positioned sequentially from left to right:
+  $$\text{keyWidth} = \text{round}(\text{wPercent} \times \text{baseWidth}), \quad x \leftarrow x + \text{keyWidth}$$
+- **Full row width (100%)**: For keys to cleanly span the full screen width without gaps or overflow, the sum of key and spacer widths in a row should equal `100%` (or `100%p`). Common examples:
+  - 10 columns: 10 keys at `10%p`
+  - 11 columns: 1 key at `15%p` + 8 keys at `8.75%p` + 1 key at `15%p`
+  - 12 columns: 12 keys at `8.33%p`
+  - 14 columns: 14 keys at `7.14%p`
+- **Overflow behavior**: The on-screen keyboard does **not** support horizontal scrolling. If the sum of widths exceeds 100%, extra keys will extend past the right edge of the display. If the sum is less than 100%, unused space will remain on the right.
+
+### Popup Keys Grid Limit (`moreKeys`)
+- The long-press popup mini-keyboard displays up to **5 columns** by default (`mMaxMoreKeysKeyboardColumn = 5`). If more keys are provided, they wrap into multiple rows within the popup.
+
+---
+
 ## Special Keycodes & Examples
 
 Below is the list of functional keycodes. To use them, assign the code to the `codes` or `longCode` attribute on a `<Key>` tag.
