@@ -811,8 +811,8 @@ public final class InputLogic {
             case Constants.CODE_SWITCH_TO_USR1:
             case Constants.CODE_SWITCH_TO_USR2:
                 final KeyboardSwitcher switcherToUsr = KeyboardSwitcher.getInstance();
-                final int userIndex = (primaryCode == Constants.CODE_SWITCH_TO_USR0) ? 0
-                        : (primaryCode == Constants.CODE_SWITCH_TO_USR1) ? 1 : 2;
+                final int userIndex = (event.getMKeyCode() == Constants.CODE_SWITCH_TO_USR0) ? 0
+                        : (event.getMKeyCode() == Constants.CODE_SWITCH_TO_USR1) ? 1 : 2;
                 final int targetElementId = (userIndex == 0) ? KeyboardId.ELEMENT_USER_0
                         : (userIndex == 1) ? KeyboardId.ELEMENT_USER_1 : KeyboardId.ELEMENT_USER_2;
                 if (switcherToUsr.isShowingKeyboardId(targetElementId)) {
