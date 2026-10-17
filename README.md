@@ -47,10 +47,16 @@ This project uses [Calendar Versioning (CalVer)](https://calver.org/) with the f
 
 ## Acknowledgements
 
-We would like to express our gratitude to the talented artists who designed the application icons:
+* **Icons & Visuals**:
+  We would like to express our gratitude to the talented artists who designed the application icons:
+  * [aroum](https://github.com/aroum)
+  * [vrifmus](https://github.com/vrifmus)
+  * [PavelAltynnikov](https://github.com/PavelAltynnikov/)
+  Detailed credits, authorship info, and preview images can be found in the [Icon README](logo/README.md).
 
-* [aroum](https://github.com/aroum)
-* [vrifmus](https://github.com/vrifmus)
-* [PavelAltynnikov](https://github.com/PavelAltynnikov/)
+* **Russian Language Corpora & Predictive N-grams**:
+  The Russian predictive dictionary and conversational n-gram model were curated and derived with reference to open-source linguistic corpora:
+  * [Taiga Corpus](https://tatianashavrina.github.io/taiga_site/) (Tatiana Shavrina et al., CC BY 4.0 / CC BY-SA 3.0)
+  * [Omnia Russica](https://omnia-russica.github.io/) open-source Russian corpus initiative
+  * [OPUS OpenSubtitles](https://opus.nlpl.eu/OpenSubtitles.php) conversational dialogue corpus
 
-Detailed credits, authorship info, and preview images can be found in the [Icon README](logo/README.md).
