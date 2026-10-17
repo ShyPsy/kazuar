@@ -66,46 +66,44 @@ public final class LayoutSettingsFragment extends SubScreenFragment {
                 Settings.readClipboardHistoryEnabled(prefs));
     }
 
-    private void setupLayoutPickers() {
+    private void setupLayoutListPreference(final String key, final String defaultValue) {
         final SharedPreferences prefs = getSharedPreferences();
-
-        final ListPreference ruPref = (ListPreference)findPreference("pref_keyboard_layout_ru");
-        if (ruPref != null) {
-            ruPref.setValue(prefs.getString("pref_keyboard_layout_ru", "v3"));
-            ruPref.setSummary(ruPref.getEntry());
-            ruPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+        final ListPreference pref = (ListPreference)findPreference(key);
+        if (pref != null) {
+            pref.setValue(prefs.getString(key, defaultValue));
+            pref.setSummary(pref.getEntry());
+            pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(final Preference preference, final Object value) {
                     final String strVal = (String)value;
-                    ruPref.setValue(strVal);
-                    final int index = ruPref.findIndexOfValue(strVal);
+                    pref.setValue(strVal);
+                    final int index = pref.findIndexOfValue(strVal);
                     if (index >= 0) {
-                        ruPref.setSummary(ruPref.getEntries()[index]);
+                        pref.setSummary(pref.getEntries()[index]);
                     }
                     KeyboardLayoutSet.clearKeyboardCache();
                     return true;
                 }
             });
         }
+    }
 
-        final ListPreference enPref = (ListPreference)findPreference("pref_keyboard_layout_en");
-        if (enPref != null) {
-            enPref.setValue(prefs.getString("pref_keyboard_layout_en", "v3"));
-            enPref.setSummary(enPref.getEntry());
-            enPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(final Preference preference, final Object value) {
-                    final String strVal = (String)value;
-                    enPref.setValue(strVal);
-                    final int index = enPref.findIndexOfValue(strVal);
-                    if (index >= 0) {
-                        enPref.setSummary(enPref.getEntries()[index]);
-                    }
-                    KeyboardLayoutSet.clearKeyboardCache();
-                    return true;
-                }
-            });
+    private void updateLayoutPicker(final String key, final String defaultValue) {
+        final SharedPreferences prefs = getSharedPreferences();
+        final ListPreference pref = (ListPreference)findPreference(key);
+        if (pref != null) {
+            pref.setValue(prefs.getString(key, defaultValue));
+            pref.setSummary(pref.getEntry());
         }
+    }
+
+    private void setupLayoutPickers() {
+        setupLayoutListPreference("pref_keyboard_layout_ru", "v3");
+        setupLayoutListPreference("pref_keyboard_layout_en", "v3");
+        setupLayoutListPreference("pref_keyboard_layout_editing", "default");
+        setupLayoutListPreference("pref_keyboard_layout_usr0", "empty");
+        setupLayoutListPreference("pref_keyboard_layout_usr1", "empty");
+        setupLayoutListPreference("pref_keyboard_layout_usr2", "empty");
     }
 
     private void setupLoadCustomLayout() {
@@ -136,7 +134,7 @@ public final class LayoutSettingsFragment extends SubScreenFragment {
             if (activity == null) return;
             CustomLayoutHelper.handleLoadedLayout(activity, data.getData(), new CustomLayoutHelper.Callback() {
                 @Override
-                public void onLayoutLoaded(final String language) {
+                public void onLayoutLoaded(final String target) {
                     updateLayoutPickersState();
                 }
             });
@@ -144,17 +142,12 @@ public final class LayoutSettingsFragment extends SubScreenFragment {
     }
 
     private void updateLayoutPickersState() {
-        final SharedPreferences prefs = getSharedPreferences();
-        final ListPreference ruPref = (ListPreference)findPreference("pref_keyboard_layout_ru");
-        if (ruPref != null) {
-            ruPref.setValue(prefs.getString("pref_keyboard_layout_ru", "v3"));
-            ruPref.setSummary(ruPref.getEntry());
-        }
-        final ListPreference enPref = (ListPreference)findPreference("pref_keyboard_layout_en");
-        if (enPref != null) {
-            enPref.setValue(prefs.getString("pref_keyboard_layout_en", "v3"));
-            enPref.setSummary(enPref.getEntry());
-        }
+        updateLayoutPicker("pref_keyboard_layout_ru", "v3");
+        updateLayoutPicker("pref_keyboard_layout_en", "v3");
+        updateLayoutPicker("pref_keyboard_layout_editing", "default");
+        updateLayoutPicker("pref_keyboard_layout_usr0", "empty");
+        updateLayoutPicker("pref_keyboard_layout_usr1", "empty");
+        updateLayoutPicker("pref_keyboard_layout_usr2", "empty");
     }
 
     private void setupHistoryRetentionTimeSettings() {

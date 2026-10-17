@@ -781,12 +781,20 @@ public final class InputLogic {
                 break;
             case Constants.CODE_SWITCH_ALPHA_SYMBOL:
                 final KeyboardSwitcher switcher = KeyboardSwitcher.getInstance();
-                if (switcher.isShowingKeyboardId(KeyboardId.ELEMENT_EDITING)) {
+                if (switcher.isShowingKeyboardId(KeyboardId.ELEMENT_EDITING,
+                        KeyboardId.ELEMENT_USER_0, KeyboardId.ELEMENT_USER_1, KeyboardId.ELEMENT_USER_2)) {
                     switcher.setAlphabetKeyboard();
                     switcher.resetKeyboardStateToAlphabet(
                             getCurrentAutoCapsState(inputTransaction.getMSettingsValues()),
                             getCurrentRecapitalizeState());
                 }
+                break;
+            case Constants.CODE_SWITCH_TO_ABC:
+                final KeyboardSwitcher switcherToAbc = KeyboardSwitcher.getInstance();
+                switcherToAbc.setAlphabetKeyboard();
+                switcherToAbc.resetKeyboardStateToAlphabet(
+                        getCurrentAutoCapsState(inputTransaction.getMSettingsValues()),
+                        getCurrentRecapitalizeState());
                 break;
             case Constants.CODE_SWITCH_TO_EDITING:
                 final KeyboardSwitcher switcherToEdit = KeyboardSwitcher.getInstance();
@@ -797,6 +805,23 @@ public final class InputLogic {
                             getCurrentRecapitalizeState());
                 } else {
                     switcherToEdit.setEditingKeyboard();
+                }
+                break;
+            case Constants.CODE_SWITCH_TO_USR0:
+            case Constants.CODE_SWITCH_TO_USR1:
+            case Constants.CODE_SWITCH_TO_USR2:
+                final KeyboardSwitcher switcherToUsr = KeyboardSwitcher.getInstance();
+                final int userIndex = (primaryCode == Constants.CODE_SWITCH_TO_USR0) ? 0
+                        : (primaryCode == Constants.CODE_SWITCH_TO_USR1) ? 1 : 2;
+                final int targetElementId = (userIndex == 0) ? KeyboardId.ELEMENT_USER_0
+                        : (userIndex == 1) ? KeyboardId.ELEMENT_USER_1 : KeyboardId.ELEMENT_USER_2;
+                if (switcherToUsr.isShowingKeyboardId(targetElementId)) {
+                    switcherToUsr.setAlphabetKeyboard();
+                    switcherToUsr.resetKeyboardStateToAlphabet(
+                            getCurrentAutoCapsState(inputTransaction.getMSettingsValues()),
+                            getCurrentRecapitalizeState());
+                } else {
+                    switcherToUsr.setUserKeyboard(userIndex);
                 }
                 break;
             case Constants.CODE_SELECT_TOGGLE:

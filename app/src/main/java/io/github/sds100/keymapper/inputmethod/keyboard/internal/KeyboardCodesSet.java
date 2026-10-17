@@ -76,7 +76,12 @@ public final class KeyboardCodesSet {
         "key_page_up",
         "key_page_down",
         "key_switch_to_editing",
-        "key_forward_delete"
+        "key_forward_delete",
+        "key_switch_to_edit",
+        "key_switch_to_usr0",
+        "key_switch_to_usr1",
+        "key_switch_to_usr2",
+        "key_switch_to_abc"
     };
 
     private static final int[] DEFAULT = {
@@ -120,12 +125,36 @@ public final class KeyboardCodesSet {
         Constants.CODE_PAGE_UP,
         Constants.CODE_PAGE_DOWN,
         Constants.CODE_SWITCH_TO_EDITING,
-        Constants.CODE_FORWARD_DELETE
+        Constants.CODE_FORWARD_DELETE,
+        Constants.CODE_SWITCH_TO_EDITING,
+        Constants.CODE_SWITCH_TO_USR0,
+        Constants.CODE_SWITCH_TO_USR1,
+        Constants.CODE_SWITCH_TO_USR2,
+        Constants.CODE_SWITCH_TO_ABC
     };
+
+    private static void registerAlias(final String alias, final String target) {
+        final Integer id = sNameToIdMap.get(target);
+        if (id != null) {
+            sNameToIdMap.put(alias, id);
+        }
+    }
 
     static {
         for (int i = 0; i < ID_TO_NAME.length; i++) {
             sNameToIdMap.put(ID_TO_NAME[i], i);
         }
+        registerAlias("switch_to_editing", "key_switch_to_editing");
+        registerAlias("switch_to_edit", "key_switch_to_edit");
+        registerAlias("switch_to_usr0", "key_switch_to_usr0");
+        registerAlias("switch_to_usr1", "key_switch_to_usr1");
+        registerAlias("switch_to_usr2", "key_switch_to_usr2");
+        registerAlias("key_switch_to_user0", "key_switch_to_usr0");
+        registerAlias("key_switch_to_user1", "key_switch_to_usr1");
+        registerAlias("key_switch_to_user2", "key_switch_to_usr2");
+        registerAlias("switch_to_user0", "key_switch_to_usr0");
+        registerAlias("switch_to_user1", "key_switch_to_usr1");
+        registerAlias("switch_to_user2", "key_switch_to_usr2");
+        registerAlias("switch_to_abc", "key_switch_to_abc");
     }
 }

@@ -279,6 +279,16 @@ public class CustomLayoutLoader {
                             iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_SPACE_KEY);
                         } else if (code == Constants.CODE_ENTER) {
                             iconId = KeyboardIconsSet.getIconId(KeyboardIconsSet.NAME_ENTER_KEY);
+                        } else if (code == Constants.CODE_SWITCH_TO_ABC) {
+                            label = "ABC";
+                        } else if (code == Constants.CODE_SWITCH_TO_EDITING) {
+                            label = "⌨";
+                        } else if (code == Constants.CODE_SWITCH_TO_USR0) {
+                            label = "USR0";
+                        } else if (code == Constants.CODE_SWITCH_TO_USR1) {
+                            label = "USR1";
+                        } else if (code == Constants.CODE_SWITCH_TO_USR2) {
+                            label = "USR2";
                         }
                     }
 
@@ -304,7 +314,10 @@ public class CustomLayoutLoader {
                                 || code == Constants.CODE_ENTER || code == Constants.CODE_LANGUAGE_SWITCH
                                 || code == Constants.CODE_EMOJI || code == Constants.CODE_CLIPBOARD
                                 || code == Constants.CODE_SETTINGS || code == Constants.CODE_SWITCH_ALPHA_SYMBOL
-                                || code == Constants.CODE_CAPSLOCK || iconId != KeyboardIconsSet.ICON_UNDEFINED) {
+                                || code == Constants.CODE_CAPSLOCK || code == Constants.CODE_SWITCH_TO_EDITING
+                                || code == Constants.CODE_SWITCH_TO_USR0 || code == Constants.CODE_SWITCH_TO_USR1
+                                || code == Constants.CODE_SWITCH_TO_USR2 || code == Constants.CODE_SWITCH_TO_ABC
+                                || iconId != KeyboardIconsSet.ICON_UNDEFINED) {
                             backgroundType = Key.BACKGROUND_TYPE_FUNCTIONAL;
                         }
                     }
@@ -445,7 +458,27 @@ public class CustomLayoutLoader {
                 return Constants.CODE_FORWARD_DELETE;
             case "switch_to_editing":
             case "key_switch_to_editing":
+            case "switch_to_edit":
+            case "key_switch_to_edit":
                 return Constants.CODE_SWITCH_TO_EDITING;
+            case "switch_to_usr0":
+            case "key_switch_to_usr0":
+            case "switch_to_user0":
+            case "key_switch_to_user0":
+                return Constants.CODE_SWITCH_TO_USR0;
+            case "switch_to_usr1":
+            case "key_switch_to_usr1":
+            case "switch_to_user1":
+            case "key_switch_to_user1":
+                return Constants.CODE_SWITCH_TO_USR1;
+            case "switch_to_usr2":
+            case "key_switch_to_usr2":
+            case "switch_to_user2":
+            case "key_switch_to_user2":
+                return Constants.CODE_SWITCH_TO_USR2;
+            case "switch_to_abc":
+            case "key_switch_to_abc":
+                return Constants.CODE_SWITCH_TO_ABC;
             case "arrow_left":
             case "key_arrow_left":
                 return Constants.CODE_ARROW_LEFT;

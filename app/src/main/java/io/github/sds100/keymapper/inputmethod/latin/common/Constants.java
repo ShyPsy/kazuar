@@ -266,6 +266,10 @@ public final class Constants {
     public static final int CODE_CLEAR = -504;
     public static final int CODE_SWITCH_TO_EDITING = -341;
     public static final int CODE_FORWARD_DELETE = -342;
+    public static final int CODE_SWITCH_TO_USR0 = -343;
+    public static final int CODE_SWITCH_TO_USR1 = -344;
+    public static final int CODE_SWITCH_TO_USR2 = -345;
+    public static final int CODE_SWITCH_TO_ABC = -346;
     public static final int CODE_ARROW_LEFT = -501;
     public static final int CODE_ARROW_RIGHT = -502;
     public static final int CODE_ARROW_UP = -503;
@@ -306,6 +310,11 @@ public final class Constants {
         case CODE_START_ONE_HANDED_MODE: return "startOneHandedMode";
         case CODE_STOP_ONE_HANDED_MODE: return "stopOneHandedMode";
         case CODE_SWITCH_ONE_HANDED_MODE: return "switchOneHandedMode";
+        case CODE_SWITCH_TO_EDITING: return "switchEdit";
+        case CODE_SWITCH_TO_USR0: return "switchUsr0";
+        case CODE_SWITCH_TO_USR1: return "switchUsr1";
+        case CODE_SWITCH_TO_USR2: return "switchUsr2";
+        case CODE_SWITCH_TO_ABC: return "switchAbc";
         default:
             if (code < CODE_SPACE) return String.format("\\u%02X", code);
             if (code < 0x100) return String.format("%c", code);

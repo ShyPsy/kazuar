@@ -34,7 +34,7 @@ import java.util.Locale
 object CustomLayoutHelper {
 
     fun interface Callback {
-        fun onLayoutLoaded(language: String)
+        fun onLayoutLoaded(target: String)
     }
 
     @JvmStatic
@@ -54,7 +54,7 @@ object CustomLayoutHelper {
             return
         }
 
-        var language: String? = null
+        var target: String? = null
         val parsedReplaceRules = mutableListOf<Pair<String, String>>()
         try {
             val factory = XmlPullParserFactory.newInstance()
@@ -64,17 +64,32 @@ object CustomLayoutHelper {
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG) {
                     val tagName = parser.name
-                    if (language == null) {
+                    if (target == null) {
                         for (i in 0 until parser.attributeCount) {
                             val attrName = parser.getAttributeName(i).substringAfter(':').lowercase(Locale.ROOT)
-                            if (attrName == "language" || attrName == "locale") {
-                                val attrVal = parser.getAttributeValue(i)?.lowercase(Locale.ROOT) ?: ""
-                                if (attrVal.contains("ru") || attrVal.contains("rus") || attrVal.contains("slavic")) {
-                                    language = "ru"
-                                } else if (attrVal.contains("en") || attrVal.contains("eng") || attrVal.contains("qwerty")) {
-                                    language = "en"
+                            val attrVal = parser.getAttributeValue(i)?.lowercase(Locale.ROOT) ?: ""
+                            if (attrName == "layer" || attrName == "target") {
+                                target = when {
+                                    attrVal in listOf("editing", "edit", "arrows", "arrow") -> "editing"
+                                    attrVal in listOf("usr0", "user0", "user_0", "user-0") -> "usr0"
+                                    attrVal in listOf("usr1", "user1", "user_1", "user-1") -> "usr1"
+                                    attrVal in listOf("usr2", "user2", "user_2", "user-2") -> "usr2"
+                                    attrVal in listOf("ru", "rus", "russian") -> "ru"
+                                    attrVal in listOf("en", "eng", "english") -> "en"
+                                    else -> null
                                 }
-                                break
+                                if (target != null) break
+                            } else if (attrName == "language" || attrName == "locale") {
+                                target = when {
+                                    attrVal in listOf("editing", "edit") -> "editing"
+                                    attrVal in listOf("usr0", "user0", "user_0", "user-0") -> "usr0"
+                                    attrVal in listOf("usr1", "user1", "user_1", "user-1") -> "usr1"
+                                    attrVal in listOf("usr2", "user2", "user_2", "user-2") -> "usr2"
+                                    attrVal.contains("ru") || attrVal.contains("rus") || attrVal.contains("slavic") -> "ru"
+                                    attrVal.contains("en") || attrVal.contains("eng") || attrVal.contains("qwerty") -> "en"
+                                    else -> null
+                                }
+                                if (target != null) break
                             }
                         }
                     }
@@ -98,9 +113,14 @@ object CustomLayoutHelper {
             return
         }
 
-        if (language == null) {
+        if (target == null) {
             val fileName = getFileName(context, uri)?.lowercase(Locale.ROOT) ?: ""
-            language = when {
+            target = when {
+                fileName.contains("editing") || fileName.contains("edit") || fileName.contains("arrow")
+                        || fileName.contains("стрелк") || fileName.contains("редактир") -> "editing"
+                fileName.contains("usr0") || fileName.contains("user0") || fileName.contains("user_0") || fileName.contains("user-0") -> "usr0"
+                fileName.contains("usr1") || fileName.contains("user1") || fileName.contains("user_1") || fileName.contains("user-1") -> "usr1"
+                fileName.contains("usr2") || fileName.contains("user2") || fileName.contains("user_2") || fileName.contains("user-2") -> "usr2"
                 fileName.contains("ru") || fileName.contains("rus") || fileName.contains("slavic") -> "ru"
                 fileName.contains("en") || fileName.contains("eng") || fileName.contains("qwerty") -> "en"
                 trimmed.any { it in '\u0400'..'\u04FF' } -> "ru"
@@ -108,23 +128,21 @@ object CustomLayoutHelper {
             }
         }
 
-        if (language == "ru" || language == "en") {
+        if (target != null) {
             try {
-                applyCustomLayout(context, trimmed, language, parsedReplaceRules, callback)
+                applyCustomLayout(context, trimmed, target, parsedReplaceRules, callback)
             } catch (e: Exception) {
                 Toast.makeText(context, context.getString(R.string.toast_file_load_failed, e.message), Toast.LENGTH_LONG).show()
             }
         } else {
-            val options = arrayOf(
-                context.getString(R.string.language_russian),
-                context.getString(R.string.language_english)
-            )
+            val targets = arrayOf("ru", "en", "editing", "usr0", "usr1", "usr2")
+            val options = targets.map { getTargetDisplayName(context, it) }.toTypedArray()
             AlertDialog.Builder(context)
-                .setTitle(R.string.dialog_select_layout_language)
+                .setTitle(R.string.dialog_select_layout_target)
                 .setItems(options) { _, which ->
-                    val selectedLang = if (which == 0) "ru" else "en"
+                    val selectedTarget = targets[which]
                     try {
-                        applyCustomLayout(context, trimmed, selectedLang, parsedReplaceRules, callback)
+                        applyCustomLayout(context, trimmed, selectedTarget, parsedReplaceRules, callback)
                     } catch (e: Exception) {
                         Toast.makeText(context, context.getString(R.string.toast_file_load_failed, e.message), Toast.LENGTH_LONG).show()
                     }
@@ -139,7 +157,7 @@ object CustomLayoutHelper {
     fun applyCustomLayout(
         context: Context,
         xmlContent: String,
-        language: String,
+        target: String,
         replaceRules: List<Pair<String, String>>? = null,
         callback: Callback? = null
     ) {
@@ -171,49 +189,64 @@ object CustomLayoutHelper {
         }
 
         val prefs = DeviceProtectedUtils.getSharedPreferences(context)
-        val rulesKey = "pref_custom_double_tap_rules_${language}_custom"
-        val existingRulesJson = prefs.getString(rulesKey, "[]") ?: "[]"
-        val rulesArray = JSONArray(existingRulesJson)
-        val existingKeys = mutableMapOf<String, JSONObject>()
-        for (i in 0 until rulesArray.length()) {
-            val obj = rulesArray.getJSONObject(i)
-            val key = obj.optString("key")
-            if (key.isNotEmpty()) {
-                existingKeys[key] = obj
-            }
-        }
+        val editor = prefs.edit()
+            .putString("pref_custom_layout_$target", xmlContent)
+            .putString("pref_keyboard_layout_$target", "custom")
 
-        for (rule in rulesToApply) {
-            val fromStr = rule.first
-            val toStr = rule.second
-            if (fromStr.isNotEmpty()) {
-                val keyChar = fromStr.substring(0, 1)
-                if (existingKeys.containsKey(keyChar)) {
-                    val obj = existingKeys[keyChar]!!
-                    obj.put("replacement", toStr)
-                    obj.put("enabled", true)
-                } else {
-                    val obj = JSONObject()
-                    obj.put("key", keyChar)
-                    obj.put("replacement", toStr)
-                    obj.put("enabled", true)
-                    rulesArray.put(obj)
-                    existingKeys[keyChar] = obj
+        if (target == "ru" || target == "en") {
+            val rulesKey = "pref_custom_double_tap_rules_${target}_custom"
+            val existingRulesJson = prefs.getString(rulesKey, "[]") ?: "[]"
+            val rulesArray = JSONArray(existingRulesJson)
+            val existingKeys = mutableMapOf<String, JSONObject>()
+            for (i in 0 until rulesArray.length()) {
+                val obj = rulesArray.getJSONObject(i)
+                val key = obj.optString("key")
+                if (key.isNotEmpty()) {
+                    existingKeys[key] = obj
                 }
             }
+
+            for (rule in rulesToApply) {
+                val fromStr = rule.first
+                val toStr = rule.second
+                if (fromStr.isNotEmpty()) {
+                    val keyChar = fromStr.substring(0, 1)
+                    if (existingKeys.containsKey(keyChar)) {
+                        val obj = existingKeys[keyChar]!!
+                        obj.put("replacement", toStr)
+                        obj.put("enabled", true)
+                    } else {
+                        val obj = JSONObject()
+                        obj.put("key", keyChar)
+                        obj.put("replacement", toStr)
+                        obj.put("enabled", true)
+                        rulesArray.put(obj)
+                        existingKeys[keyChar] = obj
+                    }
+                }
+            }
+            editor.putString(rulesKey, rulesArray.toString())
         }
 
-        prefs.edit()
-            .putString("pref_custom_layout_$language", xmlContent)
-            .putString("pref_keyboard_layout_$language", "custom")
-            .putString(rulesKey, rulesArray.toString())
-            .apply()
-
+        editor.apply()
         KeyboardLayoutSet.clearKeyboardCache()
 
-        Toast.makeText(context, context.getString(R.string.toast_custom_layout_loaded, language), Toast.LENGTH_SHORT).show()
+        val displayName = getTargetDisplayName(context, target)
+        Toast.makeText(context, context.getString(R.string.toast_custom_layout_loaded, displayName), Toast.LENGTH_SHORT).show()
 
-        callback?.onLayoutLoaded(language)
+        callback?.onLayoutLoaded(target)
+    }
+
+    fun getTargetDisplayName(context: Context, target: String): String {
+        return when (target) {
+            "ru" -> context.getString(R.string.language_russian)
+            "en" -> context.getString(R.string.language_english)
+            "editing" -> context.getString(R.string.pref_keyboard_layout_editing_title)
+            "usr0" -> context.getString(R.string.pref_keyboard_layout_usr0_title)
+            "usr1" -> context.getString(R.string.pref_keyboard_layout_usr1_title)
+            "usr2" -> context.getString(R.string.pref_keyboard_layout_usr2_title)
+            else -> target
+        }
     }
 
     private fun getFileName(context: Context, uri: Uri): String? {

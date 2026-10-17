@@ -250,6 +250,12 @@
     <string name="pref_load_custom_layout_summary">Выберите XML-файл раскладки</string>
     <string name="pref_keyboard_layout_ru_title">Раскладка для русского (ru)</string>
     <string name="pref_keyboard_layout_en_title">Раскладка для английского (en)</string>
+    <string name="settings_category_user_layers">Пользовательские слои</string>
+    <string name="pref_keyboard_layout_editing_title">Слой редактирования / стрелок</string>
+    <string name="pref_keyboard_layout_usr0_title">Пользовательский слой 1 (usr0)</string>
+    <string name="pref_keyboard_layout_usr1_title">Пользовательский слой 2 (usr1)</string>
+    <string name="pref_keyboard_layout_usr2_title">Пользовательский слой 3 (usr2)</string>
+    <string name="dialog_select_layout_target">Выберите целевой слой/раскладку</string>
     <string name="settings_category_actions">Действия и жесты</string>
     <string name="pref_enable_double_taps_title">Включить двойные нажатия</string>
     <string name="pref_enable_double_taps_summary">Двойное нажатие клавиши заменяет её (напр. ыы -> ю) без удаления</string>
@@ -299,6 +305,16 @@
         <item>V3 (экспериментальная)</item>
         <item>V4 (экспериментальная)</item>
         <item>Своя (из файла)</item>
+    </string-array>
+
+    <string-array name="layout_editing_choices_names">
+        <item>По умолчанию</item>
+        <item>Своя (из файла)</item>
+    </string-array>
+
+    <string-array name="layout_user_layer_choices_names">
+        <item>Пустой</item>
+        <item>Свой (из файла)</item>
     </string-array>
 
     <string-array name="icon_style_names">

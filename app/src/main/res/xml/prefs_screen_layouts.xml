@@ -49,10 +49,43 @@
             android:entryValues="@array/layout_choices_values"
             android:defaultValue="v3" />
 
+        <ListPreference
+            android:key="pref_keyboard_layout_editing"
+            android:title="@string/pref_keyboard_layout_editing_title"
+            android:entries="@array/layout_editing_choices_names"
+            android:entryValues="@array/layout_editing_choices_values"
+            android:defaultValue="default" />
+
         <Preference
             android:key="pref_load_custom_layout"
             android:title="@string/pref_load_custom_layout_title"
             android:summary="@string/pref_load_custom_layout_summary" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/settings_category_user_layers">
+
+        <ListPreference
+            android:key="pref_keyboard_layout_usr0"
+            android:title="@string/pref_keyboard_layout_usr0_title"
+            android:entries="@array/layout_user_layer_choices_names"
+            android:entryValues="@array/layout_user_layer_choices_values"
+            android:defaultValue="empty" />
+
+        <ListPreference
+            android:key="pref_keyboard_layout_usr1"
+            android:title="@string/pref_keyboard_layout_usr1_title"
+            android:entries="@array/layout_user_layer_choices_names"
+            android:entryValues="@array/layout_user_layer_choices_values"
+            android:defaultValue="empty" />
+
+        <ListPreference
+            android:key="pref_keyboard_layout_usr2"
+            android:title="@string/pref_keyboard_layout_usr2_title"
+            android:entries="@array/layout_user_layer_choices_names"
+            android:entryValues="@array/layout_user_layer_choices_values"
+            android:defaultValue="empty" />
 
     </PreferenceCategory>
 

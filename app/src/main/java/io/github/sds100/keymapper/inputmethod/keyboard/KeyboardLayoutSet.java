@@ -178,23 +178,30 @@ public final class KeyboardLayoutSet {
     @Nonnull
     public Keyboard getKeyboard(final int baseKeyboardLayoutSetElementId) {
         final int keyboardLayoutSetElementId;
-        switch (mParams.mMode) {
-            case KeyboardId.MODE_PHONE:
-                if (baseKeyboardLayoutSetElementId == KeyboardId.ELEMENT_SYMBOLS) {
-                    keyboardLayoutSetElementId = KeyboardId.ELEMENT_PHONE_SYMBOLS;
-                } else {
-                    keyboardLayoutSetElementId = KeyboardId.ELEMENT_PHONE;
-                }
-                break;
-            case KeyboardId.MODE_NUMBER:
-            case KeyboardId.MODE_DATE:
-            case KeyboardId.MODE_TIME:
-            case KeyboardId.MODE_DATETIME:
-                keyboardLayoutSetElementId = KeyboardId.ELEMENT_NUMBER;
-                break;
-            default:
-                keyboardLayoutSetElementId = baseKeyboardLayoutSetElementId;
-                break;
+        if (baseKeyboardLayoutSetElementId == KeyboardId.ELEMENT_EDITING
+                || baseKeyboardLayoutSetElementId == KeyboardId.ELEMENT_USER_0
+                || baseKeyboardLayoutSetElementId == KeyboardId.ELEMENT_USER_1
+                || baseKeyboardLayoutSetElementId == KeyboardId.ELEMENT_USER_2) {
+            keyboardLayoutSetElementId = baseKeyboardLayoutSetElementId;
+        } else {
+            switch (mParams.mMode) {
+                case KeyboardId.MODE_PHONE:
+                    if (baseKeyboardLayoutSetElementId == KeyboardId.ELEMENT_SYMBOLS) {
+                        keyboardLayoutSetElementId = KeyboardId.ELEMENT_PHONE_SYMBOLS;
+                    } else {
+                        keyboardLayoutSetElementId = KeyboardId.ELEMENT_PHONE;
+                    }
+                    break;
+                case KeyboardId.MODE_NUMBER:
+                case KeyboardId.MODE_DATE:
+                case KeyboardId.MODE_TIME:
+                case KeyboardId.MODE_DATETIME:
+                    keyboardLayoutSetElementId = KeyboardId.ELEMENT_NUMBER;
+                    break;
+                default:
+                    keyboardLayoutSetElementId = baseKeyboardLayoutSetElementId;
+                    break;
+            }
         }
 
         ElementParams elementParams = mParams.mKeyboardLayoutSetElementIdToParamsMap.get(
@@ -249,8 +256,47 @@ public final class KeyboardLayoutSet {
 
         boolean loadedCustom = false;
         if (id.mElementId == KeyboardId.ELEMENT_EDITING) {
+            final String layoutEditingVersion = prefs.getString("pref_keyboard_layout_editing", "default");
+            final String customXml = prefs.getString("pref_custom_layout_editing", null);
             builder.load(R.xml.kbd_editing, id);
-            loadedCustom = true;
+            if ("custom".equals(layoutEditingVersion) && customXml != null && !customXml.trim().isEmpty()) {
+                final KeyboardParams kbParams = builder.getParams();
+                if (io.github.sds100.keymapper.inputmethod.keyboard.internal.CustomLayoutLoader.tryLoadCustomLayoutFromString(mContext, kbParams, customXml)) {
+                    loadedCustom = true;
+                } else {
+                    kbParams.clearKeys();
+                    builder.load(R.xml.kbd_editing, id);
+                    loadedCustom = true;
+                }
+            } else {
+                loadedCustom = true;
+            }
+        } else if (id.mElementId == KeyboardId.ELEMENT_USER_0
+                || id.mElementId == KeyboardId.ELEMENT_USER_1
+                || id.mElementId == KeyboardId.ELEMENT_USER_2) {
+            final String userKey;
+            if (id.mElementId == KeyboardId.ELEMENT_USER_0) {
+                userKey = "usr0";
+            } else if (id.mElementId == KeyboardId.ELEMENT_USER_1) {
+                userKey = "usr1";
+            } else {
+                userKey = "usr2";
+            }
+            final String layoutUserVersion = prefs.getString("pref_keyboard_layout_" + userKey, "empty");
+            final String customXml = prefs.getString("pref_custom_layout_" + userKey, null);
+            builder.load(R.xml.kbd_user_empty, id);
+            if ("custom".equals(layoutUserVersion) && customXml != null && !customXml.trim().isEmpty()) {
+                final KeyboardParams kbParams = builder.getParams();
+                if (io.github.sds100.keymapper.inputmethod.keyboard.internal.CustomLayoutLoader.tryLoadCustomLayoutFromString(mContext, kbParams, customXml)) {
+                    loadedCustom = true;
+                } else {
+                    kbParams.clearKeys();
+                    builder.load(R.xml.kbd_user_empty, id);
+                    loadedCustom = true;
+                }
+            } else {
+                loadedCustom = true;
+            }
         } else if ("custom".equals(layoutVersion) && id.isAlphabetKeyboard()) {
             final String customXml = prefs.getString("pref_custom_layout_" + language, null);
             if (customXml != null && !customXml.trim().isEmpty()) {
@@ -265,7 +311,10 @@ public final class KeyboardLayoutSet {
             }
         }
         
-        if (!loadedCustom && id.mElementId != KeyboardId.ELEMENT_EDITING) {
+        if (!loadedCustom && id.mElementId != KeyboardId.ELEMENT_EDITING
+                && id.mElementId != KeyboardId.ELEMENT_USER_0
+                && id.mElementId != KeyboardId.ELEMENT_USER_1
+                && id.mElementId != KeyboardId.ELEMENT_USER_2) {
             final int keyboardXmlId = elementParams.mKeyboardXmlId;
             builder.load(keyboardXmlId, id);
         }

@@ -15,10 +15,19 @@ Custom keyboard layouts use the XML format parsed by [CustomLayoutLoader.java](.
 > - **English V1**: [`rows_qwerty.xml`](../app/src/main/res/xml/rows_qwerty.xml)
 > - **Symbols V4**: [`rows_symbols_v4.xml`](../app/src/main/res/xml/rows_symbols_v4.xml)
 > - **Symbols V3**: [`rows_symbols_v3.xml`](../app/src/main/res/xml/rows_symbols_v3.xml)
+> - **Editing / Arrows Layer**: [`rows_editing.xml`](../app/src/main/res/xml/rows_editing.xml)
+> - **Empty User Layer Fallback**: [`kbd_user_empty.xml`](../app/src/main/res/xml/kbd_user_empty.xml)
 
 ## Root Attributes
 
-- **`language` / `locale`**: Defines the target language of the layout (e.g. `ru` or `en`). If not specified inside the root element, it is deduced from the filename or Cyrillic content.
+- **`layer` / `target`**: Defines the target layer or layout:
+  - `editing` (or `edit`, `arrows`): Editing / navigation layout
+  - `usr0` (or `user0`): Custom User Layer 1
+  - `usr1` (or `user1`): Custom User Layer 2
+  - `usr2` (or `user2`): Custom User Layer 3
+  - `ru` (or `rus`): Russian alphabet layout
+  - `en` (or `eng`): English alphabet layout
+- **`language` / `locale`**: Defines the target language of the layout (e.g. `ru` or `en`). If neither `layer` nor `language` is specified in the root element, the target is automatically deduced from the file name, Cyrillic content, or chosen interactively via a selection dialog.
 - **`keyWidth`**: Default width of keys in percentage of keyboard width (e.g. `10%` or `10%p`).
 
 ## Elements
@@ -215,9 +224,13 @@ Below is the list of functional keycodes. To use them, assign the code to the `c
 | **Select All**      | `-324`     | Select all text in the active editor field         |
 | **Select Toggle**   | `-310`     | Toggle selection mode                              |
 | **Delete Word**     | `-337`     | Delete the entire word before cursor               |
-| **Forward Delete**  | `-342`     | Delete the character after cursor                  |
-| **Switch Editing**  | `-341`     | Switch to the editing/navigation layout            |
-| **Arrow Left**      | `-501`     | Move cursor left                                   |
+| **Forward Delete**  | `-342`     | Delete the character after cursor (`!code/key_forward_delete`) |
+| **Switch Editing**  | `-341`     | Toggle editing/navigation layout (`!code/key_switch_to_edit` or `!code/key_switch_to_editing`) |
+| **Switch Usr0**     | `-343`     | Toggle custom user layer 0 (`!code/key_switch_to_usr0`) |
+| **Switch Usr1**     | `-344`     | Toggle custom user layer 1 (`!code/key_switch_to_usr1`) |
+| **Switch Usr2**     | `-345`     | Toggle custom user layer 2 (`!code/key_switch_to_usr2`) |
+| **Switch to ABC**   | `-346`     | Unconditional switch back to alphabet layout (`!code/key_switch_to_abc`) |
+| **Arrow Left**      | `-501`     | Move cursor left (`!code/key_arrow_left`)          |
 | **Arrow Right**     | `-502`     | Move cursor right                                  |
 | **Arrow Up**        | `-503`     | Move cursor up                                     |
 | **Arrow Down**      | `-505`     | Move cursor down                                   |

@@ -203,14 +203,23 @@ Double Tap:
 
 # Edit
 
-| del | home  | up     | end            | backspc    |
-| --- | ----- | ------ | -------------- | ---------- |
-| Tab | right | select | left           | enter      |
-| Cut | copy  | down   | paste          | select all |
-| ABC | tmpl  | spc    | clpbrd manager | undo       |
-
 | del | home  | up     | end   | backspc        |
 | --- | ----- | ------ | ----- | -------------- |
 | Tab | right | select | left  | backspace word |
 | Cut | copy  | down   | paste | select all     |
 | ABC | undo  | spc    | redo  | enter          |
+
+Source: [`rows_editing.xml`](../app/src/main/res/xml/rows_editing.xml). Can be customized via custom XML (`layer="editing"` in root tag) and loaded via settings.
+
+# User Layers (usr0, usr1, usr2)
+
+Kazuar supports up to 3 customizable user layers (`usr0`, `usr1`, `usr2`), empty by default:
+- **usr0**: Triggered via `!code/key_switch_to_usr0` (code `-343`)
+- **usr1**: Triggered via `!code/key_switch_to_usr1` (code `-344`)
+- **usr2**: Triggered via `!code/key_switch_to_usr2` (code `-345`)
+
+### Layer Switching & Toggle Behavior:
+- **Toggle**: Pressing the switch key (e.g. `!code/key_switch_to_edit` or `!code/key_switch_to_usr0`) switches to that layer. Pressing the same switch key again returns to the previous alphabet layout.
+- **Direct Switch**: Pressing another layer's switch key (e.g. going from `usr0` to `usr1` or to `edit`) switches directly to that target layer.
+- **Return to Alphabet**: Pressing `!code/key_switch_to_abc` (code `-346`) or standard symbol switch (`?123`) from any editing or user layer immediately returns to the alphabet layout.
+- **Empty Fallback**: If a user layer is empty / not loaded, it opens [`kbd_user_empty.xml`](../app/src/main/res/xml/kbd_user_empty.xml) containing an "ABC" key to safely return to the alphabet layout.
